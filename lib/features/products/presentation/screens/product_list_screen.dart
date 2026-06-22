@@ -10,6 +10,7 @@ import 'package:aarambha_app/core/widgets/empty_state.dart';
 import 'package:aarambha_app/features/products/presentation/providers/product_provider.dart';
 import 'package:aarambha_app/features/categories/presentation/providers/category_provider.dart';
 import 'package:aarambha_app/features/brands/presentation/providers/brand_provider.dart';
+import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
   final String? initialCategorySlug;
@@ -111,11 +112,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.initialCategorySlug != null
-              ? state.filters.categorySlug!
-              : widget.initialBrandSlug != null
-                  ? state.filters.brandSlug!
-                  : 'Products',
+          widget.initialCategorySlug ?? widget.initialBrandSlug ?? 'Products',
         ),
         actions: [
           IconButton(
@@ -214,6 +211,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             product: product,
             onTap: () => context.push('/products/${product.slug}'),
             onAddToCart: () {
+              ref.read(cartProvider.notifier).addItem(
+                    productId: product.id,
+                    quantity: 1,
+                  );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('${product.name} added to cart')),
               );

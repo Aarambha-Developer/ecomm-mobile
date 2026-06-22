@@ -13,6 +13,7 @@ import 'package:aarambha_app/features/categories/data/models/category.dart';
 import 'package:aarambha_app/features/brands/data/models/brand.dart';
 import 'package:aarambha_app/features/home/presentation/providers/home_provider.dart';
 import 'package:aarambha_app/features/home/data/models/home_models.dart';
+import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -614,13 +615,13 @@ class _OffersSection extends StatelessWidget {
   }
 }
 
-class _FeaturedProductsSection extends StatelessWidget {
+class _FeaturedProductsSection extends ConsumerWidget {
   final ProductListState productsAsync;
 
   const _FeaturedProductsSection({required this.productsAsync});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = productsAsync;
     final products = state.products.take(10).toList();
     if (state.isLoading && products.isEmpty) {
@@ -662,6 +663,10 @@ class _FeaturedProductsSection extends StatelessWidget {
                 product: product,
                 onTap: () => context.push('/products/${product.slug}'),
                 onAddToCart: () {
+                  ref.read(cartProvider.notifier).addItem(
+                        productId: product.id,
+                        quantity: 1,
+                      );
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('${product.name} added to cart'),

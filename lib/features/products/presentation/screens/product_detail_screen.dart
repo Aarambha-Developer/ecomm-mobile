@@ -12,6 +12,7 @@ import 'package:aarambha_app/core/widgets/star_rating.dart';
 import 'package:aarambha_app/core/widgets/discount_badge.dart';
 import 'package:aarambha_app/features/products/data/models/product.dart';
 import 'package:aarambha_app/features/products/presentation/providers/product_provider.dart';
+import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -54,7 +55,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     product.hasDiscount ? product.price : null,
                 quantity: _quantity,
                 onQuantityChanged: (q) => setState(() => _quantity = q),
-                onAddToCart: () {},
+                onAddToCart: () {
+                  ref.read(cartProvider.notifier).addItem(
+                        productId: product.id,
+                        quantity: _quantity,
+                      );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${product.name} added to cart')),
+                  );
+                },
               )
             : null,
       ),
