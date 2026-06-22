@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/utils/formatters.dart';
+import 'package:aarambha_app/core/storage/local_cart_provider.dart';
+import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:aarambha_app/core/widgets/loading_widget.dart';
 import 'package:aarambha_app/core/widgets/error_view.dart';
 import 'package:aarambha_app/core/widgets/product_card.dart';
@@ -57,10 +59,24 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 quantity: _quantity,
                 onQuantityChanged: (q) => setState(() => _quantity = q),
                 onAddToCart: () {
-                  ref.read(cartProvider.notifier).addItem(
-                        productId: product.id,
-                        quantity: _quantity,
-                      );
+                  final authState = ref.read(authProvider);
+                  final price = product.hasDiscount
+                      ? product.discountedPrice
+                      : product.price;
+                  if (authState.status == AuthStatus.authenticated) {
+                    ref.read(cartProvider.notifier).addItem(
+                          productId: product.id,
+                          quantity: _quantity,
+                        );
+                  } else {
+                    ref.read(localCartProvider.notifier).addItem(
+                          productId: product.id,
+                          productName: product.name,
+                          productImage: product.primaryImage,
+                          price: price,
+                          quantity: _quantity,
+                        );
+                  }
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('${product.name} added to cart')),
                   );

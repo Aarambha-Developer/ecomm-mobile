@@ -5,6 +5,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
+import 'package:aarambha_app/core/storage/local_cart_provider.dart';
+import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:aarambha_app/core/widgets/product_card.dart';
 import 'package:aarambha_app/features/categories/presentation/providers/category_provider.dart';
 import 'package:aarambha_app/features/brands/presentation/providers/brand_provider.dart';
@@ -712,13 +714,28 @@ class _ProductsGrid extends ConsumerWidget {
                 product: product,
                 onTap: () => context.push('/products/${product.slug}'),
                 onAddToCart: () {
-                  ref.read(cartProvider.notifier).addItem(
-                        productId: product.id,
-                        quantity: 1,
-                      );
+                  final authState = ref.read(authProvider);
+                  if (authState.status == AuthStatus.authenticated) {
+                    ref.read(cartProvider.notifier).addItem(
+                          productId: product.id,
+                          quantity: 1,
+                        );
+                  } else {
+                    ref.read(localCartProvider.notifier).addItem(
+                          productId: product.id,
+                          productName: product.name,
+                          productImage:
+                              product.primaryImage,
+                          price: product.discountedPrice > 0
+                              ? product.discountedPrice
+                              : product.price,
+                          quantity: 1,
+                        );
+                  }
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${product.name} added to cart'),
+                      content:
+                          Text('${product.name} added to cart'),
                     ),
                   );
                 },

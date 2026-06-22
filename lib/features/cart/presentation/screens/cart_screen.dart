@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/utils/formatters.dart';
+import 'package:aarambha_app/core/storage/local_cart_provider.dart';
 import 'package:aarambha_app/core/widgets/empty_state.dart';
 import 'package:aarambha_app/core/widgets/price_display.dart';
 import 'package:aarambha_app/core/widgets/loading_widget.dart';
+import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 import 'package:aarambha_app/features/cart/data/models/cart.dart';
 
@@ -16,86 +18,144 @@ class CartScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cartAsync = ref.watch(cartProvider);
+    final authState = ref.watch(authProvider);
+    final isLoggedIn = authState.status == AuthStatus.authenticated;
+
+    final serverCart = ref.watch(cartProvider);
+    final localCart = ref.watch(localCartProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cart'),
         actions: [
-          cartAsync.whenOrNull(
-                data: (cart) => cart.items.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () => _clearCart(ref, context),
-                      )
-                    : null,
-              ) ??
-              const SizedBox.shrink(),
+          if (isLoggedIn)
+            serverCart.whenOrNull(
+                  data: (cart) => cart.items.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () => _clearServerCart(ref, context),
+                        )
+                      : null,
+                ) ??
+                const SizedBox.shrink(),
+          if (!isLoggedIn && localCart.items.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () {
+                ref.read(localCartProvider.notifier).clear();
+              },
+            ),
         ],
       ),
-      body: cartAsync.when(
-        loading: () => const LoadingWidget(message: 'Loading cart...'),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Failed to load cart', style: TextStyle(color: AppColors.error)),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () => ref.read(cartProvider.notifier).loadCart(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-        data: (cart) {
-          if (cart.isEmpty) {
-            return const EmptyState(
-              icon: Icons.shopping_cart_outlined,
-              title: 'Your cart is empty',
-              subtitle: 'Browse products and add items to your cart',
-              actionLabel: 'Start Shopping',
-            );
-          }
-
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: cart.items.length,
-                  separatorBuilder: (_, _) =>
-                      const Divider(height: 1, color: AppColors.divider),
-                  itemBuilder: (context, index) {
-                    return _CartItemTile(
-                      item: cart.items[index],
-                      onQuantityChanged: (qty) {
-                        ref
-                            .read(cartProvider.notifier)
-                            .updateQuantity(itemId: cart.items[index].id, quantity: qty);
-                      },
-                      onRemove: () {
-                        ref
-                            .read(cartProvider.notifier)
-                            .removeItem(cart.items[index].id);
-                      },
-                    );
-                  },
-                ),
-              ),
-              _CartBottomBar(
-                totalAmount: cart.totalAmount,
-                itemCount: cart.totalItems,
-                onCheckout: () => context.push('/checkout'),
-              ),
-            ],
-          );
-        },
-      ),
+      body: isLoggedIn ? _buildServerCart(context, ref, serverCart) : _buildLocalCart(context, ref, localCart),
     );
   }
 
-  void _clearCart(WidgetRef ref, BuildContext context) {
+  Widget _buildServerCart(BuildContext context, WidgetRef ref, AsyncValue<Cart> cartAsync) {
+    return cartAsync.when(
+      loading: () => const LoadingWidget(message: 'Loading cart...'),
+      error: (e, _) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Failed to load cart', style: TextStyle(color: AppColors.error)),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () => ref.read(cartProvider.notifier).loadCart(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+      data: (cart) {
+        if (cart.isEmpty) {
+          return const EmptyState(
+            icon: Icons.shopping_bag_outlined,
+            title: 'Your cart is empty',
+            subtitle: 'Browse products and add items to your cart',
+            actionLabel: 'Start Shopping',
+          );
+        }
+
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: cart.items.length,
+                separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.divider),
+                itemBuilder: (context, index) {
+                  final item = cart.items[index];
+                  return _ServerCartItemTile(
+                    item: item,
+                    onQuantityChanged: (qty) {
+                      ref.read(cartProvider.notifier).updateQuantity(
+                            itemId: item.id,
+                            quantity: qty,
+                          );
+                    },
+                    onRemove: () {
+                      ref.read(cartProvider.notifier).removeItem(item.id);
+                    },
+                  );
+                },
+              ),
+            ),
+            _CartBottomBar(
+              totalAmount: cart.totalAmount,
+              itemCount: cart.totalItems,
+              onCheckout: () => context.push('/checkout'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLocalCart(BuildContext context, WidgetRef ref, LocalCart localCart) {
+    if (localCart.isEmpty) {
+      return const EmptyState(
+        icon: Icons.shopping_bag_outlined,
+        title: 'Your cart is empty',
+        subtitle: 'Browse products and add items to your cart',
+        actionLabel: 'Start Shopping',
+      );
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: localCart.items.length,
+            separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.divider),
+            itemBuilder: (context, index) {
+              final item = localCart.items[index];
+              return _LocalCartItemTile(
+                item: item,
+                onQuantityChanged: (qty) {
+                  ref.read(localCartProvider.notifier).updateQuantity(
+                        item.productId,
+                        qty,
+                      );
+                },
+                onRemove: () {
+                  ref.read(localCartProvider.notifier).removeItem(item.productId);
+                },
+              );
+            },
+          ),
+        ),
+        _CartBottomBar(
+          totalAmount: localCart.totalAmount,
+          itemCount: localCart.itemCount,
+          onCheckout: () => context.push('/login'),
+        ),
+      ],
+    );
+  }
+
+  void _clearServerCart(WidgetRef ref, BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -119,13 +179,71 @@ class CartScreen extends ConsumerWidget {
   }
 }
 
-class _CartItemTile extends StatelessWidget {
+class _ServerCartItemTile extends StatelessWidget {
   final CartItem item;
   final ValueChanged<int> onQuantityChanged;
   final VoidCallback onRemove;
 
-  const _CartItemTile({
+  const _ServerCartItemTile({
     required this.item,
+    required this.onQuantityChanged,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _CartItemLayout(
+      imageUrl: item.productImage,
+      name: item.productName,
+      unitPrice: item.unitPrice,
+      subtotal: item.subtotal,
+      quantity: item.quantity,
+      onQuantityChanged: onQuantityChanged,
+      onRemove: onRemove,
+    );
+  }
+}
+
+class _LocalCartItemTile extends StatelessWidget {
+  final LocalCartItem item;
+  final ValueChanged<int> onQuantityChanged;
+  final VoidCallback onRemove;
+
+  const _LocalCartItemTile({
+    required this.item,
+    required this.onQuantityChanged,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _CartItemLayout(
+      imageUrl: item.productImage,
+      name: item.productName,
+      unitPrice: item.price,
+      subtotal: item.price * item.quantity,
+      quantity: item.quantity,
+      onQuantityChanged: onQuantityChanged,
+      onRemove: onRemove,
+    );
+  }
+}
+
+class _CartItemLayout extends StatelessWidget {
+  final String? imageUrl;
+  final String name;
+  final double unitPrice;
+  final double subtotal;
+  final int quantity;
+  final ValueChanged<int> onQuantityChanged;
+  final VoidCallback onRemove;
+
+  const _CartItemLayout({
+    this.imageUrl,
+    required this.name,
+    required this.unitPrice,
+    required this.subtotal,
+    required this.quantity,
     required this.onQuantityChanged,
     required this.onRemove,
   });
@@ -142,9 +260,9 @@ class _CartItemTile extends StatelessWidget {
             child: SizedBox(
               width: 80,
               height: 80,
-              child: item.productImage != null
+              child: imageUrl != null
                   ? CachedNetworkImage(
-                      imageUrl: item.productImage!,
+                      imageUrl: imageUrl!,
                       fit: BoxFit.cover,
                       placeholder: (_, _) => Container(
                         color: AppColors.surfaceVariant,
@@ -166,7 +284,7 @@ class _CartItemTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.productName,
+                  name,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -176,7 +294,7 @@ class _CartItemTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 PriceDisplay(
-                  price: item.unitPrice,
+                  price: unitPrice,
                   priceStyle: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -187,15 +305,15 @@ class _CartItemTile extends StatelessWidget {
                 Row(
                   children: [
                     _QuantityControl(
-                      quantity: item.quantity,
-                      onDecrement: item.quantity > 1
-                          ? () => onQuantityChanged(item.quantity - 1)
+                      quantity: quantity,
+                      onDecrement: quantity > 1
+                          ? () => onQuantityChanged(quantity - 1)
                           : null,
-                      onIncrement: () => onQuantityChanged(item.quantity + 1),
+                      onIncrement: () => onQuantityChanged(quantity + 1),
                     ),
                     const Spacer(),
                     Text(
-                      Formatters.formatCurrency(item.subtotal),
+                      Formatters.formatCurrency(subtotal),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
