@@ -10,6 +10,14 @@ class AccountScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final displayName = user?.fullName ?? user?.email ?? 'Guest User';
+    final initial = user != null
+        ? (user.fullName?.isNotEmpty == true
+                ? user.fullName![0]
+                : user.email[0])
+            .toUpperCase()
+        : 'G';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
@@ -17,36 +25,59 @@ class AccountScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           const SizedBox(height: 20),
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: AppColors.primaryLight,
-            child: Text(
-              authState.user != null
-                  ? authState.user!.email[0].toUpperCase()
-                  : 'G',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
+          GestureDetector(
+            onTap: authState.status == AuthStatus.authenticated
+                ? () => context.push('/profile/edit')
+                : null,
+            child: CircleAvatar(
+              radius: 40,
+              backgroundColor: AppColors.primaryLight,
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            authState.user?.email ?? 'Guest User',
+            displayName,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          if (authState.user?.phoneNumber != null)
+          if (user?.phoneNumber != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                authState.user!.phoneNumber!,
+                user!.phoneNumber!,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
             ),
           const SizedBox(height: 32),
+          if (authState.status == AuthStatus.authenticated) ...[
+            _menuItem(
+              context,
+              Icons.person_outline,
+              'Edit Profile',
+              onTap: () => context.push('/profile/edit'),
+            ),
+            _menuItem(
+              context,
+              Icons.lock_outline,
+              'Change Password',
+              onTap: () => context.push('/profile/change-password'),
+            ),
+            _menuItem(
+              context,
+              Icons.location_on_outlined,
+              'My Addresses',
+              onTap: () => context.push('/addresses'),
+            ),
+          ],
           _menuItem(
             context,
             Icons.shopping_bag_outlined,

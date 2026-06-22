@@ -100,6 +100,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
+  void updateUser(AuthUser user) {
+    state = state.copyWith(user: user);
+  }
+
   void clearError() {
     state = state.copyWith(clearError: true);
   }

@@ -104,4 +104,27 @@ class AuthRepository {
   Future<void> verifyPhone(String otp) async {
     await _remoteSource.verifyPhone(otp);
   }
+
+  Future<AuthUser> updateProfile({
+    String? fullName,
+    String? email,
+    String? phoneNumber,
+  }) async {
+    final data = <String, dynamic>{};
+    if (fullName != null) data['full_name'] = fullName;
+    if (email != null) data['email'] = email;
+    if (phoneNumber != null) data['phone_number'] = phoneNumber;
+    final response = await _remoteSource.updateProfile(data);
+    return AuthUser.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _remoteSource.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
+  }
 }

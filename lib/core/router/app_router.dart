@@ -16,6 +16,10 @@ import '../../features/orders/presentation/screens/orders_list_screen.dart';
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/checkout/presentation/screens/checkout_screen.dart';
 import '../../features/contact/presentation/screens/contact_screen.dart';
+import '../../features/auth/presentation/screens/profile_edit_screen.dart';
+import '../../features/auth/presentation/screens/change_password_screen.dart';
+import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
+import '../../features/addresses/presentation/screens/address_form_screen.dart';
 
 class AppRouter {
   final GlobalKey<NavigatorState> _rootNavigatorKey;
@@ -110,6 +114,30 @@ class AppRouter {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const ProfileEditScreen(),
+      ),
+      GoRoute(
+        path: '/profile/change-password',
+        builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      GoRoute(
+        path: '/addresses',
+        builder: (context, state) => const AddressesListScreen(),
+      ),
+      GoRoute(
+        path: '/addresses/add',
+        builder: (context, state) => const AddressFormScreen(),
+      ),
+      GoRoute(
+        path: '/addresses/edit',
+        builder: (context, state) {
+          return AddressFormScreen(
+            address: state.extra as dynamic,
+          );
+        },
       ),
     ],
   );

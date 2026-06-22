@@ -95,4 +95,21 @@ class AuthRemoteSource {
   Future<Map<String, dynamic>> resendVerification() async {
     return await _client.post(ApiConstants.resendVerification);
   }
+
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    return await _client.patch(ApiConstants.me, data: data);
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _client.post(
+      ApiConstants.changePassword,
+      data: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      },
+    );
+  }
 }

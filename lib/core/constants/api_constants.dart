@@ -61,6 +61,12 @@ class ApiConstants {
   static const String validateCoupon = '/coupons/validate/';
   static const String adminCoupons = '/admin/coupons/';
 
+  // Profile
+  static const String changePassword = '/auth/password/change/';
+
+  // Addresses
+  static const String addresses = '/addresses/';
+
   // Contact
   static const String contact = '/contact/';
   static const String adminContacts = '/admin/contacts/';
