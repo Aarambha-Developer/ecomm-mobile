@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/storage/secure_storage.dart';
 import '../../data/repositories/cart_repository.dart';
 import '../../data/models/cart.dart';
 
@@ -7,20 +8,31 @@ final cartRepositoryProvider = Provider<CartRepository>((ref) {
   return CartRepository(ref.read(apiClientProvider));
 });
 
+final storageProvider = Provider<SecureStorage>((ref) {
+  return ref.read(apiClientProvider).storage;
+});
+
 class CartNotifier extends StateNotifier<AsyncValue<Cart>> {
   final CartRepository _repository;
+  final SecureStorage _storage;
 
-  CartNotifier(this._repository) : super(const AsyncValue.loading()) {
+  CartNotifier(this._repository, this._storage)
+      : super(const AsyncValue.loading()) {
     loadCart();
   }
 
   Future<void> loadCart() async {
     state = const AsyncValue.loading();
     try {
+      final hasTokens = await _storage.hasTokens();
+      if (!hasTokens) {
+        state = const AsyncValue.data(Cart(id: ''));
+        return;
+      }
       final cart = await _repository.getCart();
       state = AsyncValue.data(cart);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+} catch (_) {
+      state = const AsyncValue.data(Cart(id: ''));
     }
   }
 
@@ -124,5 +136,8 @@ class CartNotifier extends StateNotifier<AsyncValue<Cart>> {
 }
 
 final cartProvider = StateNotifierProvider<CartNotifier, AsyncValue<Cart>>((ref) {
-  return CartNotifier(ref.read(cartRepositoryProvider));
+  return CartNotifier(
+    ref.read(cartRepositoryProvider),
+    ref.read(storageProvider),
+  );
 });

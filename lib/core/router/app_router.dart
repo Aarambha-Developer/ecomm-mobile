@@ -59,9 +59,7 @@ class AppRouter {
 
       if (isInitial) return null;
 
-      final isProtected = _protectedRoutes.any(path.startsWith) ||
-          path == '/cart' ||
-          path == '/wishlist';
+      final isProtected = _protectedRoutes.any(path.startsWith);
 
       if (isProtected && !isLoggedIn) {
         return '/login';

@@ -15,14 +15,44 @@ import 'package:aarambha_app/features/home/presentation/providers/home_provider.
 import 'package:aarambha_app/features/home/data/models/home_models.dart';
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(productListProvider.notifier).loadProducts(refresh: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(productListProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final brandsAsync = ref.watch(brandsProvider);
-    final productsAsync = ref.watch(productListProvider);
+    final productsState = ref.watch(productListProvider);
     final heroAsync = ref.watch(heroSlidesProvider);
     final offersAsync = ref.watch(offersProvider);
 
@@ -42,6 +72,7 @@ class HomeScreen extends ConsumerWidget {
           ]);
         },
         child: ListView(
+          controller: _scrollController,
           children: [
             _HeroSection(heroAsync: heroAsync),
             const SizedBox(height: 16),
@@ -49,8 +80,8 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             _OffersSection(offersAsync: offersAsync),
             const SizedBox(height: 24),
-            _FeaturedProductsSection(productsAsync: productsAsync),
-            const SizedBox(height: 24),
+            _ProductsGrid(productsState: productsState),
+            const SizedBox(height: 32),
             _BrandsSection(brandsAsync: brandsAsync),
             const SizedBox(height: 32),
             _Footer(),
@@ -613,51 +644,71 @@ class _OffersSection extends StatelessWidget {
   }
 }
 
-class _FeaturedProductsSection extends ConsumerWidget {
-  final ProductListState productsAsync;
+class _ProductsGrid extends ConsumerWidget {
+  final ProductListState productsState;
 
-  const _FeaturedProductsSection({required this.productsAsync});
+  const _ProductsGrid({required this.productsState});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = productsAsync;
-    final products = state.products.take(10).toList();
-    if (state.isLoading && products.isEmpty) {
+    final products = productsState.products;
+
+    if (productsState.isLoading && products.isEmpty) {
       return _sectionShimmer(
-        title: 'Featured Products',
-        height: 260,
+        title: 'Latest Products',
+        height: 280,
         child: Row(
           children: List.generate(
             3,
             (_) => Container(
-              width: 160,
-              margin: const EdgeInsets.only(right: 8),
+              width: 170,
+              margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),
         ),
       );
     }
-    if (products.isEmpty) return const SizedBox.shrink();
 
-return _SectionHeader(
-      title: 'Featured Products',
-      onViewAll: () => context.push('/products'),
-      child: SizedBox(
-        height: 300,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: products.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 12),
-          itemBuilder: (context, index) {
-            final product = products[index];
-            return SizedBox(
-              width: 170,
-              child: ProductCard(
+          child: Text(
+            'Latest Products',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: products.length + (productsState.isLoadingMore ? 2 : 0),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.62,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 12,
+            ),
+            itemBuilder: (context, index) {
+              if (index >= products.length) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                );
+              }
+              final product = products[index];
+              return ProductCard(
                 product: product,
                 onTap: () => context.push('/products/${product.slug}'),
                 onAddToCart: () {
@@ -671,11 +722,38 @@ return _SectionHeader(
                     ),
                   );
                 },
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
-      ),
+        if (productsState.isLoadingMore)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+        if (productsState.error != null && products.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: Column(
+                children: [
+                  const Icon(Icons.error_outline,
+                      color: AppColors.textHint, size: 40),
+                  const SizedBox(height: 8),
+                  Text(productsState.error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
