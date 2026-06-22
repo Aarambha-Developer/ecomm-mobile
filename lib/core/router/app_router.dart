@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -209,27 +210,25 @@ class _MainShellState extends ConsumerState<_MainShell> {
     final location = GoRouterState.of(context).uri.toString();
 
     int currentIndex = 0;
-    if (location == '/cart') currentIndex = 1;
-    if (location == '/wishlist') currentIndex = 2;
-    if (location == '/account') currentIndex = 3;
+    if (location.startsWith('/cart')) currentIndex = 1;
+    if (location.startsWith('/wishlist')) currentIndex = 2;
+    if (location.startsWith('/account')) currentIndex = 3;
 
     return Scaffold(
       body: widget.child,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
+              color: AppColors.cardShadow,
+              blurRadius: 16,
+              offset: Offset(0, -4),
             ),
           ],
         ),
         child: BottomNavigationBar(
           currentIndex: currentIndex,
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-          unselectedItemColor: Colors.grey,
           onTap: (index) {
             switch (index) {
               case 0:
@@ -246,25 +245,25 @@ class _MainShellState extends ConsumerState<_MainShell> {
                 break;
             }
           },
-          items: [
+          items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, color: currentIndex == 0 ? null : Colors.grey),
-              activeIcon: const Icon(Icons.home),
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home_rounded),
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart_outlined, color: currentIndex == 1 ? null : Colors.grey),
-              activeIcon: const Icon(Icons.shopping_cart),
+              icon: Icon(Icons.shopping_bag_outlined),
+              activeIcon: Icon(Icons.shopping_bag),
               label: 'Cart',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_outline, color: currentIndex == 2 ? null : Colors.grey),
-              activeIcon: const Icon(Icons.favorite),
+              icon: Icon(Icons.favorite_outline),
+              activeIcon: Icon(Icons.favorite_rounded),
               label: 'Wishlist',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline, color: currentIndex == 3 ? null : Colors.grey),
-              activeIcon: const Icon(Icons.person),
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person_rounded),
               label: 'Account',
             ),
           ],

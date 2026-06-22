@@ -22,27 +22,36 @@ class AccountScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
-          const SizedBox(height: 20),
-          GestureDetector(
-            onTap: authState.status == AuthStatus.authenticated
-                ? () => context.push('/profile/edit')
-                : null,
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: AppColors.primaryLight,
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
+          const SizedBox(height: 24),
+          Center(
+            child: GestureDetector(
+              onTap: authState.status == AuthStatus.authenticated
+                  ? () => context.push('/profile/edit')
+                  : null,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.primary, width: 2),
+                ),
+                child: CircleAvatar(
+                  radius: 44,
+                  backgroundColor: AppColors.primaryLight,
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             displayName,
             textAlign: TextAlign.center,
@@ -57,84 +66,115 @@ class AccountScreen extends ConsumerWidget {
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
             ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
           if (authState.status == AuthStatus.authenticated) ...[
-            _menuItem(
-              context,
-              Icons.person_outline,
-              'Edit Profile',
-              onTap: () => context.push('/profile/edit'),
-            ),
-            _menuItem(
-              context,
-              Icons.lock_outline,
-              'Change Password',
-              onTap: () => context.push('/profile/change-password'),
-            ),
-            _menuItem(
-              context,
-              Icons.location_on_outlined,
-              'My Addresses',
-              onTap: () => context.push('/addresses'),
-            ),
+            _buildSection(context, 'Account Settings', [
+              _menuItem(context, Icons.person_outline, 'Edit Profile',
+                  onTap: () => context.push('/profile/edit')),
+              _menuItem(context, Icons.lock_outline, 'Change Password',
+                  onTap: () => context.push('/profile/change-password')),
+              _menuItem(context, Icons.location_on_outlined, 'My Addresses',
+                  onTap: () => context.push('/addresses')),
+            ]),
+            const SizedBox(height: 16),
           ],
-          _menuItem(
-            context,
-            Icons.shopping_bag_outlined,
-            'My Orders',
-            onTap: () => context.push('/orders'),
-          ),
-          _menuItem(
-            context,
-            Icons.favorite_outline,
-            'My Wishlist',
-            onTap: () => context.push('/wishlist'),
-          ),
-          _menuItem(
-            context,
-            Icons.contact_mail_outlined,
-            'Contact Us',
-            onTap: () => context.push('/contact'),
-          ),
-          const Divider(height: 32),
+          _buildSection(context, 'Shopping', [
+            _menuItem(context, Icons.shopping_bag_outlined, 'My Orders',
+                onTap: () => context.push('/orders')),
+            _menuItem(context, Icons.favorite_outline, 'My Wishlist',
+                onTap: () => context.push('/wishlist')),
+          ]),
+          const SizedBox(height: 16),
+          _buildSection(context, 'Support', [
+            _menuItem(context, Icons.contact_mail_outlined, 'Contact Us',
+                onTap: () => context.push('/contact')),
+          ]),
+          const SizedBox(height: 24),
           if (authState.status == AuthStatus.authenticated)
-            _menuItem(
-              context,
-              Icons.logout,
-              'Sign Out',
-              isDestructive: true,
-              onTap: () {
-                ref.read(authProvider.notifier).logout();
-                context.go('/');
-              },
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  ref.read(authProvider.notifier).logout();
+                  context.go('/');
+                },
+                icon: const Icon(Icons.logout, size: 20),
+                label: const Text('Sign Out'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                ),
+              ),
             )
           else
-            _menuItem(
-              context,
-              Icons.login,
-              'Sign In',
-              onTap: () => context.push('/login'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/login'),
+                icon: const Icon(Icons.login, size: 20),
+                label: const Text('Sign In'),
+              ),
             ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(
+      BuildContext context, String title, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textHint,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          ...children,
         ],
       ),
     );
   }
 
   Widget _menuItem(BuildContext context, IconData icon, String label,
-      {bool isDestructive = false, VoidCallback? onTap}) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isDestructive ? AppColors.error : AppColors.textPrimary,
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          color: isDestructive ? AppColors.error : AppColors.textPrimary,
+      {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.textPrimary, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.textHint, size: 20),
+          ],
         ),
       ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
     );
   }
 }

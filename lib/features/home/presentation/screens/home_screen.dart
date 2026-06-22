@@ -70,18 +70,25 @@ class _HeroSection extends ConsumerStatefulWidget {
   ConsumerState<_HeroSection> createState() => _HeroSectionState();
 }
 
-class _HeroSectionState extends ConsumerState<_HeroSection> {
-  final _pageController = PageController();
+class _HeroSectionState extends ConsumerState<_HeroSection>
+    with SingleTickerProviderStateMixin {
+  final _pageController = PageController(viewportFraction: 1, initialPage: 0);
   int _currentPage = 0;
   Timer? _timer;
+  late AnimationController _dotAnimController;
+  int _displayedPage = 0;
 
   @override
   void initState() {
     super.initState();
+    _dotAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
     _pageController.addListener(() {
       final page = _pageController.page?.round() ?? 0;
-      if (page != _currentPage) {
-        setState(() => _currentPage = page);
+      if (page != _displayedPage) {
+        setState(() => _displayedPage = page);
       }
     });
     _startAutoScroll();
@@ -95,13 +102,13 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
 
   void _startAutoScroll() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
       final slides = widget.heroAsync.valueOrNull ?? [];
       if (slides.isEmpty) return;
-      final next = (_currentPage + 1) % slides.length;
+      final next = (_displayedPage + 1) % slides.length;
       _pageController.animateToPage(
         next,
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOut,
       );
     });
@@ -111,6 +118,7 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
   void dispose() {
     _timer?.cancel();
     _pageController.dispose();
+    _dotAnimController.dispose();
     super.dispose();
   }
 
@@ -128,125 +136,118 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
 
   Widget _buildShimmer() {
     return Container(
-      height: 200,
-      color: AppColors.surfaceVariant,
-    );
-  }
-
-  Widget _buildCarousel(List<HeroSlide> slides) {
-    return SizedBox(
-      height: 220,
-      child: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: slides.length,
-            itemBuilder: (context, index) {
-              final slide = slides[index];
-              return _buildSlide(slide);
-            },
-          ),
-          Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                slides.length,
-                (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: _currentPage == i ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == i
-                        ? AppColors.primary
-                        : Colors.white.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(4),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 2,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+      height: 280,
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
       ),
     );
   }
 
-  Widget _buildSlide(HeroSlide slide) {
+  Widget _buildCarousel(List<HeroSlide> slides) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 280,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: slides.length,
+            onPageChanged: (page) {
+              setState(() {
+                _currentPage = page;
+                _displayedPage = page;
+              });
+            },
+            itemBuilder: (context, index) {
+              final slide = slides[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildSlide(context, slide),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(slides.length, (i) {
+            final isActive = i == _currentPage;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: isActive ? 20 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.primary : AppColors.border,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildSlide(BuildContext context, HeroSlide slide) {
     if (slide.image != null) {
       return GestureDetector(
         onTap: () => _handleSlideTap(slide),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            CachedNetworkImage(
-              imageUrl: slide.image!,
-              fit: BoxFit.cover,
-              errorWidget: (_, _, _) => _buildGradientSlide(slide),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withValues(alpha: 0.3),
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.2),
-                  ],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CachedNetworkImage(
+                imageUrl: slide.image!,
+                fit: BoxFit.cover,
+                errorWidget: (_, _, _) => _buildGradientSlide(slide),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.4),
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.1),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              left: 24,
-              right: 80,
-              bottom: 40,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    slide.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      shadows: [
-                        BoxShadow(
-                          color: Colors.black38,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (slide.subtitle != null) ...[
-                    const SizedBox(height: 6),
+              Positioned(
+                left: 24,
+                right: 80,
+                bottom: 32,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      slide.subtitle!,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 14,
-                        shadows: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 3,
-                          ),
-                        ],
+                      slide.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
                       ),
                     ),
+                    if (slide.subtitle != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        slide.subtitle!,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -257,26 +258,32 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
     return GestureDetector(
       onTap: () => _handleSlideTap(slide),
       child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primaryLight, AppColors.primary.withValues(alpha: 0.7)],
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [AppColors.primary, AppColors.primaryDark],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(40),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+children: [
+              const Icon(Icons.spa, color: Colors.white, size: 32),
+              const SizedBox(height: 12),
                 Text(
                   slide.title,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
                 ),
                 if (slide.subtitle != null) ...[
                   const SizedBox(height: 8),
@@ -307,46 +314,54 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
 
   Widget _buildStaticHero(BuildContext context) {
     return Container(
-      height: 200,
+      height: 240,
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primaryLight, AppColors.primary.withValues(alpha: 0.7)],
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'The glow edit',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
+              const Icon(Icons.spa, color: Colors.white, size: 36),
+              const SizedBox(height: 12),
+              const Text(
+                'Discover Beauty',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Discover our curated skincare collection',
+                'Curated skincare essentials for your daily glow',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white70, fontSize: 15),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 28, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 onPressed: () => context.push('/products'),
-                child: const Text('Shop Now'),
+                child: const Text('Shop Now',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ],
           ),
@@ -378,7 +393,7 @@ class _CategoriesSection extends StatelessWidget {
                     width: 60,
                     height: 60,
                     decoration: const BoxDecoration(
-                      color: AppColors.surfaceVariant,
+                      color: AppColors.surface,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -386,7 +401,7 @@ class _CategoriesSection extends StatelessWidget {
                   Container(
                     width: 50,
                     height: 10,
-                    color: AppColors.surfaceVariant,
+                    color: AppColors.surface,
                   ),
                 ],
               ),
@@ -398,52 +413,45 @@ class _CategoriesSection extends StatelessWidget {
       data: (categories) {
         if (categories.isEmpty) return const SizedBox.shrink();
         return _SectionHeader(
-          title: 'Categories',
+          title: 'Shop by Category',
           onViewAll: () => context.push('/products'),
-            child: SizedBox(
-              height: 110,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: categories.length,
-separatorBuilder: (_, _) => const SizedBox(width: 8),
-               itemBuilder: (context, index) {
-                 final category = categories[index];
+          child: SizedBox(
+            height: 110,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: categories.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 4),
+              itemBuilder: (context, index) {
+                final category = categories[index];
                 return GestureDetector(
                   onTap: () =>
                       context.push('/categories/${category.slug}'),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.surfaceVariant,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.12),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                          image: category.image != null
-                              ? DecorationImage(
-                                  image:
-                                      CachedNetworkImageProvider(category.image!),
-                                  fit: BoxFit.cover,
-                                )
+                  child: SizedBox(
+                    width: 72,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.primaryLight,
+                            image: category.image != null
+                                ? DecorationImage(
+                                    image: CachedNetworkImageProvider(
+                                        category.image!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: category.image == null
+                              ? const Icon(Icons.category,
+                                  color: AppColors.primary, size: 28)
                               : null,
                         ),
-                        child: category.image == null
-                            ? const Icon(Icons.category,
-                                color: AppColors.textHint, size: 28)
-                            : null,
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: 72,
-                        child: Text(
+                        const SizedBox(height: 8),
+                        Text(
                           category.name,
                           textAlign: TextAlign.center,
                           maxLines: 2,
@@ -451,10 +459,11 @@ separatorBuilder: (_, _) => const SizedBox(width: 8),
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -479,9 +488,9 @@ class _OffersSection extends StatelessWidget {
       data: (offers) {
         if (offers.isEmpty) return const SizedBox.shrink();
         return _SectionHeader(
-          title: 'Offers',
+          title: 'Special Offers',
           child: SizedBox(
-            height: 150,
+            height: 140,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -492,53 +501,43 @@ class _OffersSection extends StatelessWidget {
                 return GestureDetector(
                   onTap: () => context.push('/products'),
                   child: Container(
-                    width: 260,
+                    width: 280,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primaryLight,
-                          AppColors.primary.withValues(alpha: 0.5),
-                        ],
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, AppColors.primaryDark],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Row(
                       children: [
                         if (offer.image != null)
                           SizedBox(
-                            width: 100,
+                            width: 110,
                             child: CachedNetworkImage(
                               imageUrl: offer.image!,
-                              width: 100,
-                              height: 150,
+                              height: 140,
                               fit: BoxFit.cover,
+                              errorWidget: (_, _, _) => const SizedBox(),
                             ),
                           ),
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
-                              mainAxisAlignment:
-                                  MainAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
                                   offer.title,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 15,
+                                    fontSize: 16,
                                     color: Colors.white,
+                                    letterSpacing: -0.2,
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -556,24 +555,23 @@ class _OffersSection extends StatelessWidget {
                                   ),
                                 ],
                                 if (offer.discountText != null) ...[
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 10),
                                   Container(
                                     padding:
                                         const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 4),
+                                            horizontal: 12, vertical: 5),
                                     decoration: BoxDecoration(
                                       color: Colors.white
-                                          .withValues(alpha: 0.25),
+                                          .withValues(alpha: 0.2),
                                       borderRadius:
-                                          BorderRadius.circular(20),
+                                          BorderRadius.circular(12),
                                     ),
                                     child: Text(
                                       offer.discountText!,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w700,
-                                        fontSize: 11,
+                                        fontSize: 12,
                                       ),
                                     ),
                                   ),
@@ -596,17 +594,17 @@ class _OffersSection extends StatelessWidget {
 
   Widget _buildLoading() {
     return _sectionShimmer(
-      title: 'Offers',
-      height: 150,
+      title: 'Special Offers',
+      height: 140,
       child: Row(
         children: List.generate(
           2,
           (_) => Container(
-            width: 260,
+            width: 280,
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(14),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
         ),
@@ -645,20 +643,20 @@ class _FeaturedProductsSection extends ConsumerWidget {
     }
     if (products.isEmpty) return const SizedBox.shrink();
 
-    return _SectionHeader(
+return _SectionHeader(
       title: 'Featured Products',
       onViewAll: () => context.push('/products'),
       child: SizedBox(
-        height: 270,
+        height: 300,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: products.length,
-separatorBuilder: (_, _) => const SizedBox(width: 8),
-           itemBuilder: (context, index) {
-             final product = products[index];
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
+          itemBuilder: (context, index) {
+            final product = products[index];
             return SizedBox(
-              width: 160,
+              width: 170,
               child: ProductCard(
                 product: product,
                 onTap: () => context.push('/products/${product.slug}'),
@@ -698,11 +696,11 @@ class _BrandsSection extends StatelessWidget {
             4,
             (_) => Container(
               width: 110,
-              height: 60,
+              height: 56,
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -711,61 +709,59 @@ class _BrandsSection extends StatelessWidget {
       error: (_, _) => const SizedBox.shrink(),
       data: (brands) {
         if (brands.isEmpty) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle(context, 'Shop by Brand'),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: brands.take(8).map((brand) {
-                  return GestureDetector(
-                    onTap: () =>
-                        context.push('/brands/${brand.slug}'),
-                    child: Container(
-                      width:
-                          (MediaQuery.of(context).size.width - 42) / 2,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: AppColors.border.withValues(alpha: 0.5)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: brand.image != null
-                            ? CachedNetworkImage(
+        return _SectionHeader(
+          title: 'Shop by Brand',
+          child: SizedBox(
+            height: 56,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: brands.length.clamp(0, 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final brand = brands[index];
+                return GestureDetector(
+                  onTap: () => context.push('/brands/${brand.slug}'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Center(
+                      child: brand.image != null
+                          ? Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: CachedNetworkImage(
                                 imageUrl: brand.image!,
                                 height: 28,
                                 fit: BoxFit.contain,
-                              )
-                            : Text(
-                                brand.title,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                ),
+                                errorWidget: (_, _, _) =>
+                                    _brandText(brand),
                               ),
-                      ),
+                            )
+                          : _brandText(brand),
                     ),
-                  );
-                }).toList(),
-              ),
-            ],
+                  ),
+                );
+              },
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _brandText(Brand brand) {
+    return Text(
+      brand.title,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 13,
+        color: AppColors.textPrimary,
+      ),
     );
   }
 }
@@ -790,24 +786,25 @@ class _SectionHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _buildSectionTitle(context, title),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
               if (onViewAll != null)
-                GestureDetector(
-                  onTap: onViewAll,
+                TextButton(
+                  onPressed: onViewAll,
                   child: const Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'View all',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
+                      Text('View all',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600)),
                       SizedBox(width: 2),
-                      Icon(Icons.chevron_right,
-                          size: 18, color: AppColors.primary),
+                      Icon(Icons.chevron_right, size: 18),
                     ],
                   ),
                 ),
@@ -821,15 +818,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-Widget _buildSectionTitle(BuildContext context, String title) {
-  return Text(
-    title,
-    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-        ),
-  );
-}
-
 Widget _sectionShimmer({
   required String title,
   required double height,
@@ -840,18 +828,13 @@ Widget _sectionShimmer({
     children: [
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              width: 120,
-              height: 16,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ],
+        child: Container(
+          width: 120,
+          height: 18,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(4),
+          ),
         ),
       ),
       const SizedBox(height: 12),
@@ -871,33 +854,33 @@ class _Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 48),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withValues(alpha: 0.05),
-            AppColors.surface,
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 48),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        border: Border(top: BorderSide(color: AppColors.divider)),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.spa_outlined,
-            size: 32,
-            color: AppColors.primary.withValues(alpha: 0.6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.spa_outlined,
+                size: 28, color: AppColors.primary),
           ),
-          const SizedBox(height: 12),
-          Text(
+          const SizedBox(height: 16),
+          const Text(
             'Lumora Nine',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+              letterSpacing: -0.3,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           const Text(
             'Your trusted destination for authentic beauty products.',
             textAlign: TextAlign.center,
@@ -908,7 +891,7 @@ class _Footer extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           const Text(
-            '© 2026 Lumora Nine. All rights reserved.',
+            '© 2026 Lumora Nine',
             style: TextStyle(
               color: AppColors.textHint,
               fontSize: 12,

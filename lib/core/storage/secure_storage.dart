@@ -28,8 +28,12 @@ class SecureStorage {
   }
 
   Future<void> clearTokens() async {
-    await _storage.delete(key: _accessTokenKey);
-    await _storage.delete(key: _refreshTokenKey);
+    try {
+      await _storage.delete(key: _accessTokenKey);
+    } catch (_) {}
+    try {
+      await _storage.delete(key: _refreshTokenKey);
+    } catch (_) {}
   }
 
   Future<bool> hasTokens() async {
