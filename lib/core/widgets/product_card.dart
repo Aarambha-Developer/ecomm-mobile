@@ -47,7 +47,7 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              flex: 3,
+              flex: 4,
               child: Stack(
                 children: [
                   _buildImage(),
@@ -81,13 +81,13 @@ class ProductCard extends StatelessWidget {
                             color: isWishlisted
                                 ? AppColors.accent
                                 : AppColors.textHint,
-                            size: 20,
+                            size: 18,
                           ),
                           onPressed: onToggleWishlist,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
+                            minWidth: 28,
+                            minHeight: 28,
                           ),
                         ),
                       ),
@@ -112,9 +112,9 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -130,11 +130,11 @@ class ProductCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       product.name,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                         height: 1.2,
@@ -148,21 +148,21 @@ class ProductCard extends StatelessWidget {
                       discountedPrice: product.discountedPrice,
                       discountPercentage: product.discountPercentage,
                       priceStyle: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         color: AppColors.price,
                       ),
                       discountedPriceStyle: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         color: AppColors.priceDiscounted,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     if (onAddToCart != null && product.stockQuantity > 0)
                       SizedBox(
                         width: double.infinity,
-                        height: 32,
+                        height: 28,
                         child: ElevatedButton(
                           onPressed: onAddToCart,
                           style: ElevatedButton.styleFrom(
@@ -171,23 +171,14 @@ class ProductCard extends StatelessWidget {
                             padding: EdgeInsets.zero,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             textStyle: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
                             ),
                           ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.shopping_bag_outlined,
-                                  size: 14),
-                              SizedBox(width: 4),
-                              Text('Add'),
-                            ],
-                          ),
+                          child: const Text('Add'),
                         ),
                       ),
                   ],
