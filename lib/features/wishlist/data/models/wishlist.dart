@@ -12,7 +12,7 @@ class WishlistItem {
   factory WishlistItem.fromJson(Map<String, dynamic> json) {
     Map<String, dynamic>? productData;
     if (json['product'] is Map) {
-      productData = Map<String, dynamic>.from(json['product']);
+      productData = Map<String, dynamic>.from(json['product'] as Map);
     }
     return WishlistItem(
       id: json['id']?.toString() ?? '',

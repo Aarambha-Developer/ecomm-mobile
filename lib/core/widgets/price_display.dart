@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/formatters.dart';
 
 class PriceDisplay extends StatelessWidget {
   final double price;
@@ -23,7 +24,7 @@ class PriceDisplay extends StatelessWidget {
 
     if (!hasDiscount) {
       return Text(
-        'Rs. ${price.toStringAsFixed(price == price.round() ? 0 : 2)}',
+        Formatters.formatCurrency(price),
         style: priceStyle ??
             const TextStyle(
               fontSize: 16,
@@ -37,7 +38,7 @@ class PriceDisplay extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Rs. ${discountedPrice!.toStringAsFixed(discountedPrice! == discountedPrice!.round() ? 0 : 2)}',
+          Formatters.formatCurrency(discountedPrice!),
           style: discountedPriceStyle ??
               const TextStyle(
                 fontSize: 16,
@@ -47,7 +48,7 @@ class PriceDisplay extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          'Rs. ${price.toStringAsFixed(price == price.round() ? 0 : 2)}',
+          Formatters.formatCurrency(price),
           style: const TextStyle(
             fontSize: 13,
             decoration: TextDecoration.lineThrough,

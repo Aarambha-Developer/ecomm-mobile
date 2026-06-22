@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
+import 'package:aarambha_app/core/utils/formatters.dart';
 import 'package:aarambha_app/core/widgets/loading_widget.dart';
 import 'package:aarambha_app/core/widgets/error_view.dart';
 import 'package:aarambha_app/core/widgets/product_card.dart';
@@ -402,7 +403,7 @@ class _RelatedProducts extends ConsumerWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: related.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final product = related[index];
               return SizedBox(
@@ -484,7 +485,7 @@ class _BottomBar extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onAddToCart,
                 child: Text(
-                  'Add to Cart · Rs. ${(price * quantity).toStringAsFixed(price == price.round() ? 0 : 2)}',
+                  'Add to Cart · ${Formatters.formatCurrency(price * quantity)}',
                 ),
               ),
             ),

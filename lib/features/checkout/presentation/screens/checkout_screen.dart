@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,20 +9,12 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
-import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:aarambha_app/core/utils/formatters.dart';
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
+import 'package:aarambha_app/features/cart/data/models/cart.dart';
 import 'package:aarambha_app/features/checkout/data/models/payment_method.dart';
-import 'package:aarambha_app/features/checkout/data/repositories/checkout_repository.dart';
+import 'package:aarambha_app/features/checkout/presentation/providers/checkout_provider.dart';
 import 'package:aarambha_app/features/checkout/presentation/screens/payment_webview_screen.dart';
-
-final checkoutRepositoryProvider = Provider<CheckoutRepository>((ref) {
-  return CheckoutRepository(ref.read(apiClientProvider));
-});
-
-final paymentMethodsProvider = FutureProvider<List<PaymentMethod>>((ref) async {
-  final repo = ref.read(checkoutRepositoryProvider);
-  return await repo.getPaymentMethods();
-});
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -128,8 +122,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       }
 
       if (mounted) {
-        ref.read(cartProvider.notifier).loadCart();
-        context.push('/orders/${result.orderId}');
+        unawaited(ref.read(cartProvider.notifier).loadCart());
+        unawaited(context.push('/orders/${result.orderId}'));
       }
     } catch (e) {
       if (mounted) {
@@ -324,7 +318,9 @@ class _PaymentStep extends StatelessWidget {
                               : 'QR / Bank transfer',
                     ),
                     value: method.id,
+                    // ignore: deprecated_member_use
                     groupValue: selectedMethodId,
+                    // ignore: deprecated_member_use
                     onChanged: (v) {
                       if (v != null) onMethodSelected(v);
                     },
@@ -450,7 +446,7 @@ class _PaymentMethodDetail extends ConsumerWidget {
 }
 
 class _ReviewStep extends StatelessWidget {
-  final dynamic cart;
+  final Cart? cart;
   final TextEditingController addressController;
   final TextEditingController notesController;
   final TextEditingController couponController;
@@ -529,37 +525,36 @@ class _ReviewStep extends StatelessWidget {
             title: 'Order Summary',
             child: Column(
               children: [
-                _SummaryRow(label: 'Subtotal', value: 'Rs. $subtotal'),
+                _SummaryRow(label: 'Subtotal', value: Formatters.formatCurrencyPlain(subtotal)),
                 if (discount > 0)
                   _SummaryRow(
                     label: 'Discount (${couponDiscount?.round()}%)',
-                    value: '- Rs. ${discount.toStringAsFixed(2)}',
+                    value: '- ${Formatters.formatCurrencyPlain(discount)}',
                     valueColor: AppColors.success,
                   ),
                 const Divider(),
                 _SummaryRow(
                   label: 'Total',
-                  value: 'Rs. ${total.toStringAsFixed(total == total.round() ? 0 : 2)}',
+                  value: Formatters.formatCurrency(total),
                   isBold: true,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 20),
-          if (cart?.items != null)
-            ...List.generate(
-              (cart.items as List).length,
-              (i) => Padding(
+          if (cart != null && cart!.items.isNotEmpty)
+            ...cart!.items.map(
+              (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
                     Text(
-                      '${(cart.items[i] as dynamic).productName}',
+                      item.productName,
                       style: const TextStyle(fontSize: 13),
                     ),
                     const Spacer(),
                     Text(
-                      'x${(cart.items[i] as dynamic).quantity}',
+                      'x${item.quantity}',
                       style: const TextStyle(fontSize: 13),
                     ),
                   ],

@@ -53,7 +53,7 @@ class CheckoutResult {
     final hasGateway = json['payment_gateway'] is Map;
     String? paymentUrl;
     if (hasGateway) {
-      final gateway = Map<String, dynamic>.from(json['payment_gateway']);
+      final gateway = Map<String, dynamic>.from(json['payment_gateway'] as Map);
       paymentUrl = gateway['payment_url'] as String?;
     }
     return CheckoutResult(

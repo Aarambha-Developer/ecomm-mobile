@@ -118,7 +118,7 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
   Widget build(BuildContext context) {
     return widget.heroAsync.when(
       loading: () => _buildShimmer(),
-      error: (_, __) => _buildStaticHero(context),
+      error: (_, _) => _buildStaticHero(context),
       data: (slides) {
         if (slides.isNotEmpty) return _buildCarousel(slides);
         return _buildStaticHero(context);
@@ -162,11 +162,11 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
                   decoration: BoxDecoration(
                     color: _currentPage == i
                         ? AppColors.primary
-                        : Colors.white.withOpacity(0.5),
+                        : Colors.white.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(4),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 2,
                       ),
                     ],
@@ -190,15 +190,15 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
             CachedNetworkImage(
               imageUrl: slide.image!,
               fit: BoxFit.cover,
-              errorWidget: (_, __, ___) => _buildGradientSlide(slide),
+              errorWidget: (_, _, _) => _buildGradientSlide(slide),
             ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withOpacity(0.3),
+                    Colors.black.withValues(alpha: 0.3),
                     Colors.transparent,
-                    Colors.black.withOpacity(0.2),
+                    Colors.black.withValues(alpha: 0.2),
                   ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
@@ -232,10 +232,10 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
                     Text(
                       slide.subtitle!,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 14,
-                        shadows: [
-                          const BoxShadow(
+                        shadows: const [
+                          BoxShadow(
                             color: Colors.black26,
                             blurRadius: 3,
                           ),
@@ -259,7 +259,7 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.primaryLight, AppColors.primary.withOpacity(0.7)],
+            colors: [AppColors.primaryLight, AppColors.primary.withValues(alpha: 0.7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -310,7 +310,7 @@ class _HeroSectionState extends ConsumerState<_HeroSection> {
       height: 200,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primaryLight, AppColors.primary.withOpacity(0.7)],
+          colors: [AppColors.primaryLight, AppColors.primary.withValues(alpha: 0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -394,7 +394,7 @@ class _CategoriesSection extends StatelessWidget {
           ),
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (categories) {
         if (categories.isEmpty) return const SizedBox.shrink();
         return _SectionHeader(
@@ -406,9 +406,9 @@ class _CategoriesSection extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final category = categories[index];
+separatorBuilder: (_, _) => const SizedBox(width: 8),
+               itemBuilder: (context, index) {
+                 final category = categories[index];
                 return GestureDetector(
                   onTap: () =>
                       context.push('/categories/${category.slug}'),
@@ -422,7 +422,7 @@ class _CategoriesSection extends StatelessWidget {
                           color: AppColors.surfaceVariant,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.12),
+                              color: AppColors.primary.withValues(alpha: 0.12),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -475,7 +475,7 @@ class _OffersSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return offersAsync.when(
       loading: _buildLoading,
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (offers) {
         if (offers.isEmpty) return const SizedBox.shrink();
         return _SectionHeader(
@@ -486,7 +486,7 @@ class _OffersSection extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: offers.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 final offer = offers[index];
                 return GestureDetector(
@@ -498,14 +498,14 @@ class _OffersSection extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           AppColors.primaryLight,
-                          AppColors.primary.withOpacity(0.5),
+                          AppColors.primary.withValues(alpha: 0.5),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: AppColors.primary.withValues(alpha: 0.15),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -564,7 +564,7 @@ class _OffersSection extends StatelessWidget {
                                             vertical: 4),
                                     decoration: BoxDecoration(
                                       color: Colors.white
-                                          .withOpacity(0.25),
+                                          .withValues(alpha: 0.25),
                                       borderRadius:
                                           BorderRadius.circular(20),
                                     ),
@@ -654,9 +654,9 @@ class _FeaturedProductsSection extends ConsumerWidget {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: products.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (context, index) {
-            final product = products[index];
+separatorBuilder: (_, _) => const SizedBox(width: 8),
+           itemBuilder: (context, index) {
+             final product = products[index];
             return SizedBox(
               width: 160,
               child: ProductCard(
@@ -708,7 +708,7 @@ class _BrandsSection extends StatelessWidget {
           ),
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (brands) {
         if (brands.isEmpty) return const SizedBox.shrink();
         return Padding(
@@ -733,10 +733,10 @@ class _BrandsSection extends StatelessWidget {
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: AppColors.border.withOpacity(0.5)),
+                            color: AppColors.border.withValues(alpha: 0.5)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -875,7 +875,7 @@ class _Footer extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.05),
             AppColors.surface,
           ],
           begin: Alignment.topCenter,
@@ -887,7 +887,7 @@ class _Footer extends StatelessWidget {
           Icon(
             Icons.spa_outlined,
             size: 32,
-            color: AppColors.primary.withOpacity(0.6),
+            color: AppColors.primary.withValues(alpha: 0.6),
           ),
           const SizedBox(height: 12),
           Text(

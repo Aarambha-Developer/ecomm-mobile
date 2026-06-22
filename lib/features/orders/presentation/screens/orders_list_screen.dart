@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:aarambha_app/features/orders/presentation/providers/orders_provider.dart';
 import 'package:aarambha_app/features/orders/data/models/order.dart';
 import 'package:aarambha_app/core/theme/app_colors.dart';
+import 'package:aarambha_app/core/utils/formatters.dart';
 
 class OrdersListScreen extends ConsumerWidget {
   const OrdersListScreen({super.key});
@@ -35,7 +36,7 @@ class OrdersListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.shopping_bag_outlined, size: 64, color: AppColors.textHint),
+                  const Icon(Icons.shopping_bag_outlined, size: 64, color: AppColors.textHint),
                   const SizedBox(height: 16),
                   Text('No orders yet', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
@@ -55,7 +56,7 @@ class OrdersListScreen extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: orders.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final order = orders[index];
                 return _OrderCard(order: order);
@@ -104,7 +105,7 @@ class _OrderCard extends StatelessWidget {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: order.items.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (context, i) {
                       final item = order.items[i];
                       return ClipRRect(
@@ -115,7 +116,7 @@ class _OrderCard extends StatelessWidget {
                                 width: 48,
                                 height: 48,
                                 fit: BoxFit.cover,
-                                errorWidget: (_, __, ___) => Container(
+                                errorWidget: (_, _, _) => Container(
                                   color: AppColors.primaryLight,
                                   child: const Icon(Icons.image, size: 20),
                                 ),
@@ -141,7 +142,7 @@ class _OrderCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Rs. ${order.totalAmount.toStringAsFixed(order.totalAmount == order.totalAmount.round() ? 0 : 2)}',
+                    Formatters.formatCurrency(order.totalAmount),
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
@@ -191,7 +192,7 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

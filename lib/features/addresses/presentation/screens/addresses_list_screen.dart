@@ -31,7 +31,7 @@ class AddressesListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.location_off, size: 64, color: AppColors.textHint),
+                  const Icon(Icons.location_off, size: 64, color: AppColors.textHint),
                   const SizedBox(height: 16),
                   Text(
                     'No saved addresses',
@@ -55,7 +55,7 @@ class AddressesListScreen extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: addresses.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final address = addresses[index];
                 return _AddressCard(
@@ -169,7 +169,7 @@ class _AddressCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(

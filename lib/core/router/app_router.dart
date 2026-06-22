@@ -22,15 +22,56 @@ import '../../features/checkout/presentation/screens/checkout_screen.dart';
 import '../../features/contact/presentation/screens/contact_screen.dart';
 import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
 import '../../features/addresses/presentation/screens/address_form_screen.dart';
+import '../../features/addresses/data/models/address.dart';
 
 class AppRouter {
   final GlobalKey<NavigatorState> _rootNavigatorKey;
+  final WidgetRef _ref;
 
-  AppRouter(this._rootNavigatorKey);
+  AppRouter(this._rootNavigatorKey, this._ref);
+
+  static const _protectedRoutes = <String>{
+    '/orders',
+    '/checkout',
+    '/addresses',
+    '/addresses/add',
+    '/addresses/edit',
+    '/profile/edit',
+    '/profile/change-password',
+  };
+
+  static const _authRoutes = <String>{
+    '/login',
+    '/register',
+    '/forgot-password',
+  };
 
   late final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    redirect: (context, state) {
+      final authState = _ref.read(authProvider);
+      final isLoggedIn = authState.status == AuthStatus.authenticated;
+      final isInitial = authState.status == AuthStatus.initial ||
+          authState.status == AuthStatus.loading;
+      final path = state.uri.path;
+
+      if (isInitial) return null;
+
+      final isProtected = _protectedRoutes.any(path.startsWith) ||
+          path == '/cart' ||
+          path == '/wishlist';
+
+      if (isProtected && !isLoggedIn) {
+        return '/login';
+      }
+
+      if (_authRoutes.contains(path) && isLoggedIn) {
+        return '/';
+      }
+
+      return null;
+    },
     routes: [
       ShellRoute(
         builder: (context, state, child) => _MainShell(child: child),
@@ -137,14 +178,14 @@ class AppRouter {
         path: '/addresses/edit',
         builder: (context, state) {
           return AddressFormScreen(
-            address: state.extra as dynamic,
+            address: state.extra as Address?,
           );
         },
       ),
     ],
   );
 
-  CustomTransitionPage _noTransitionPage(GoRouterState state, Widget child) {
+  CustomTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
     return CustomTransitionPage(
       key: state.pageKey,
       child: child,
@@ -178,7 +219,7 @@ class _MainShellState extends ConsumerState<_MainShell> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, -4),
             ),
@@ -190,13 +231,6 @@ class _MainShellState extends ConsumerState<_MainShell> {
           selectedItemColor: Theme.of(context).colorScheme.primary,
           unselectedItemColor: Colors.grey,
           onTap: (index) {
-            if (index == 1 || index == 2) {
-              final authState = ref.read(authProvider);
-              if (authState.status != AuthStatus.authenticated) {
-                context.push('/login');
-                return;
-              }
-            }
             switch (index) {
               case 0:
                 context.go('/');

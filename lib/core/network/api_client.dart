@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/storage/secure_storage.dart';
@@ -27,7 +28,7 @@ class ApiClient {
       LogInterceptor(
         requestBody: true,
         responseBody: true,
-        logPrint: (o) {},
+        logPrint: (o) => developer.log(o.toString(), name: 'ApiClient'),
       ),
     ]);
   }
@@ -130,7 +131,7 @@ class ApiClient {
     }
   }
 
-  Map<String, dynamic> _handleResponse(Response response) {
+  Map<String, dynamic> _handleResponse(Response<dynamic> response) {
     final data = response.data;
     if (data is Map) {
       return Map<String, dynamic>.from(data);

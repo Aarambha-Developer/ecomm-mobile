@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,10 +29,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    ref.read(authProvider.notifier).login(
+    unawaited(ref.read(authProvider.notifier).login(
       _emailController.text.trim(),
       _passwordController.text,
-    );
+    ));
   }
 
   @override

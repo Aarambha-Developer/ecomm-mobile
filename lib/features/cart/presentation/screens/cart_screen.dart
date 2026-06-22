@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
+import 'package:aarambha_app/core/utils/formatters.dart';
 import 'package:aarambha_app/core/widgets/empty_state.dart';
 import 'package:aarambha_app/core/widgets/price_display.dart';
 import 'package:aarambha_app/core/widgets/loading_widget.dart';
@@ -38,7 +39,7 @@ class CartScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Failed to load cart', style: TextStyle(color: AppColors.error)),
+              const Text('Failed to load cart', style: TextStyle(color: AppColors.error)),
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () => ref.read(cartProvider.notifier).loadCart(),
@@ -63,7 +64,7 @@ class CartScreen extends ConsumerWidget {
                 child: ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: cart.items.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (_, _) =>
                       const Divider(height: 1, color: AppColors.divider),
                   itemBuilder: (context, index) {
                     return _CartItemTile(
@@ -194,7 +195,7 @@ class _CartItemTile extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      'Rs. ${item.subtotal.toStringAsFixed(item.subtotal == item.subtotal.round() ? 0 : 2)}',
+                      Formatters.formatCurrency(item.subtotal),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -329,7 +330,7 @@ class _CartBottomBar extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Rs. ${totalAmount.toStringAsFixed(totalAmount == totalAmount.round() ? 0 : 2)}',
+                    Formatters.formatCurrency(totalAmount),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:aarambha_app/features/orders/presentation/providers/orders_provider.dart';
 import 'package:aarambha_app/features/orders/data/models/order.dart';
 import 'package:aarambha_app/core/theme/app_colors.dart';
+import 'package:aarambha_app/core/utils/formatters.dart';
 
 class OrderDetailScreen extends ConsumerWidget {
   final String id;
@@ -65,7 +66,7 @@ class OrderDetailScreen extends ConsumerWidget {
                                       width: 48,
                                       height: 48,
                                       fit: BoxFit.cover,
-                                      errorWidget: (_, __, ___) => Container(
+                                      errorWidget: (_, _, _) => Container(
                                         color: AppColors.primaryLight,
                                         child: const Icon(Icons.image, size: 20),
                                       ),
@@ -101,7 +102,7 @@ class OrderDetailScreen extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              'Rs. ${(item.price * item.quantity).toStringAsFixed(2)}',
+                              Formatters.formatCurrencyPlain(item.price * item.quantity),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
@@ -118,19 +119,19 @@ class OrderDetailScreen extends ConsumerWidget {
                   title: 'Summary',
                   child: Column(
                     children: [
-                      _SummaryRow(label: 'Subtotal', value: 'Rs. ${order.totalAmount.toStringAsFixed(2)}'),
+                      _SummaryRow(label: 'Subtotal', value: Formatters.formatCurrencyPlain(order.totalAmount)),
                       if (order.discountAmount != null && order.discountAmount! > 0)
                         _SummaryRow(
                           label: order.couponCode != null
                               ? 'Discount (${order.couponCode})'
                               : 'Discount',
-                          value: '- Rs. ${order.discountAmount!.toStringAsFixed(2)}',
+                          value: '- ${Formatters.formatCurrencyPlain(order.discountAmount!)}',
                           valueColor: AppColors.success,
                         ),
                       const Divider(),
                       _SummaryRow(
                         label: 'Total',
-                        value: 'Rs. ${order.totalAmount.toStringAsFixed(2)}',
+                        value: Formatters.formatCurrencyPlain(order.totalAmount),
                         isBold: true,
                       ),
                     ],
@@ -200,7 +201,7 @@ class _OrderHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(

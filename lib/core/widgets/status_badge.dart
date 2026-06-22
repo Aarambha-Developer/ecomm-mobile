@@ -14,13 +14,13 @@ class StatusBadge extends StatelessWidget {
   factory StatusBadge.orderStatus(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return StatusBadge(label: 'Pending', color: AppColors.statusPending);
+        return const StatusBadge(label: 'Pending', color: AppColors.statusPending);
       case 'confirmed':
-        return StatusBadge(label: 'Confirmed', color: AppColors.statusConfirmed);
+        return const StatusBadge(label: 'Confirmed', color: AppColors.statusConfirmed);
       case 'shipped':
-        return StatusBadge(label: 'Shipped', color: AppColors.statusShipped);
+        return const StatusBadge(label: 'Shipped', color: AppColors.statusShipped);
       case 'delivered':
-        return StatusBadge(label: 'Delivered', color: AppColors.statusDelivered);
+        return const StatusBadge(label: 'Delivered', color: AppColors.statusDelivered);
       default:
         return StatusBadge(label: status, color: AppColors.secondary);
     }
@@ -29,11 +29,11 @@ class StatusBadge extends StatelessWidget {
   factory StatusBadge.paymentStatus(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return StatusBadge(label: 'Pending', color: AppColors.statusPending);
+        return const StatusBadge(label: 'Pending', color: AppColors.statusPending);
       case 'completed':
-        return StatusBadge(label: 'Completed', color: AppColors.statusConfirmed);
+        return const StatusBadge(label: 'Completed', color: AppColors.statusConfirmed);
       case 'failed':
-        return StatusBadge(label: 'Failed', color: AppColors.statusFailed);
+        return const StatusBadge(label: 'Failed', color: AppColors.statusFailed);
       default:
         return StatusBadge(label: status, color: AppColors.secondary);
     }

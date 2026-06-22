@@ -74,17 +74,17 @@ class Product {
 
     Map<String, dynamic>? category;
     if (json['category'] is Map) {
-      category = Map<String, dynamic>.from(json['category']);
+      category = Map<String, dynamic>.from(json['category'] as Map);
     }
 
     Map<String, dynamic>? brand;
     if (json['brand'] is Map) {
-      brand = Map<String, dynamic>.from(json['brand']);
+      brand = Map<String, dynamic>.from(json['brand'] as Map);
     }
 
     Map<String, dynamic>? primaryImageObj;
     if (json['primary_image'] is Map) {
-      primaryImageObj = Map<String, dynamic>.from(json['primary_image']);
+      primaryImageObj = Map<String, dynamic>.from(json['primary_image'] as Map);
     }
 
     List<ProductImage> parsedImages = [];

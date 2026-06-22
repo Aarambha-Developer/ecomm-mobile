@@ -33,7 +33,7 @@ class WishlistScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Failed to load wishlist',
+              const Text('Failed to load wishlist',
                   style: TextStyle(color: AppColors.error)),
               const SizedBox(height: 8),
               ElevatedButton(

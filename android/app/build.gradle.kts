@@ -25,11 +25,29 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            // TODO: Create a keystore and reference it here via gradle.properties
+            // or environment variables for production signing.
+            // Example:
+            //   keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
+            //   keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            //   storeFile = file(System.getenv("KEYSTORE_PATH") ?: "upload-keystore.jks")
+            //   storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // TODO: Configure the release signing config once the keystore is created.
+            // signingConfig = signingConfigs.getByName("release")
             signingConfig = signingConfigs.getByName("debug")
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

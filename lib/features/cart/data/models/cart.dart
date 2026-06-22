@@ -30,12 +30,13 @@ class CartItem {
 
     Map<String, dynamic>? product;
     if (json['product'] is Map) {
-      product = Map<String, dynamic>.from(json['product']);
+      product = Map<String, dynamic>.from(json['product'] as Map);
     }
 
     Map<String, dynamic>? primaryImage;
     if (product?['primary_image'] is Map) {
-      primaryImage = Map<String, dynamic>.from(product!['primary_image']);
+      primaryImage =
+          Map<String, dynamic>.from(product!['primary_image'] as Map);
     }
 
     return CartItem(

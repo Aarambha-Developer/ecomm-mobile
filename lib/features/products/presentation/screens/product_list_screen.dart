@@ -409,7 +409,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                     }).toList(),
                   ),
                   loading: () => const CircularProgressIndicator(strokeWidth: 2),
-                  error: (_, __) => const Text('Failed to load categories'),
+                  error: (_, _) => const Text('Failed to load categories'),
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -438,7 +438,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                     }).toList(),
                   ),
                   loading: () => const CircularProgressIndicator(strokeWidth: 2),
-                  error: (_, __) => const Text('Failed to load brands'),
+                  error: (_, _) => const Text('Failed to load brands'),
                 ),
                 const SizedBox(height: 20),
                 const Text(

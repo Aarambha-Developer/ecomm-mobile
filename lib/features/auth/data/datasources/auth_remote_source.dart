@@ -23,7 +23,7 @@ class AuthRemoteSource {
       data: {
         'email': email,
         'password': password,
-        'phone_number': ?phoneNumber,
+        if (phoneNumber != null) 'phone_number': phoneNumber,
       },
     );
   }
@@ -56,7 +56,6 @@ class AuthRemoteSource {
     return await _client.post(
       ApiConstants.passwordResetRequest,
       data: {
-        'email': contact,
         if (contact.contains('@')) 'email': contact else 'phone_number': contact,
       },
     );
@@ -70,8 +69,7 @@ class AuthRemoteSource {
     return await _client.post(
       ApiConstants.passwordResetConfirm,
       data: {
-        'email': contact,
-        'phone_number': contact,
+        if (contact.contains('@')) 'email': contact else 'phone_number': contact,
         'otp': otp,
         'new_password': newPassword,
       },

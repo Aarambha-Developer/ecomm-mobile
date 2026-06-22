@@ -58,7 +58,7 @@ AppException handleDioError(DioException error) {
       if (data is Map) {
         message = data['message'] as String? ?? message;
         if (data['errors'] is Map) {
-          errors = Map<String, dynamic>.from(data['errors']);
+          errors = Map<String, dynamic>.from(data['errors'] as Map);
         }
       }
 
