@@ -71,4 +71,15 @@ class CatalogRemoteSource {
       queryParameters: {'page': page},
     );
   }
+
+  Future<Map<String, dynamic>> getHeroSlides() async {
+    return await _client.get(ApiConstants.hero);
+  }
+
+  Future<Map<String, dynamic>> getActiveOffers() async {
+    return await _client.get(
+      ApiConstants.offers,
+      queryParameters: {'is_active': true},
+    );
+  }
 }
