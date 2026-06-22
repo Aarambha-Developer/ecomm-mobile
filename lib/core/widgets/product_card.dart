@@ -25,14 +25,24 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        margin: const EdgeInsets.all(4),
-        shape: RoundedRectangleBorder(
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.border, width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        elevation: 0,
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -52,21 +62,33 @@ class ProductCard extends StatelessWidget {
                     Positioned(
                       top: 4,
                       right: 4,
-                      child: IconButton(
-                        icon: Icon(
-                          isWishlisted
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: isWishlisted
-                              ? AppColors.accent
-                              : AppColors.textHint,
-                          size: 20,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 4,
+                            ),
+                          ],
                         ),
-                        onPressed: onToggleWishlist,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
+                        child: IconButton(
+                          icon: Icon(
+                            isWishlisted
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: isWishlisted
+                                ? AppColors.accent
+                                : AppColors.textHint,
+                            size: 20,
+                          ),
+                          onPressed: onToggleWishlist,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
                         ),
                       ),
                     ),
@@ -92,7 +114,7 @@ class ProductCard extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -103,17 +125,19 @@ class ProductCard extends StatelessWidget {
                           fontSize: 10,
                           color: AppColors.textHint,
                           fontWeight: FontWeight.w500,
+                          letterSpacing: 0.3,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       product.name,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
+                        height: 1.2,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -125,16 +149,16 @@ class ProductCard extends StatelessWidget {
                       discountPercentage: product.discountPercentage,
                       priceStyle: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: AppColors.price,
                       ),
                       discountedPriceStyle: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: AppColors.priceDiscounted,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     if (onAddToCart != null && product.stockQuantity > 0)
                       SizedBox(
                         width: double.infinity,
@@ -145,15 +169,25 @@ class ProductCard extends StatelessWidget {
                             backgroundColor: AppColors.primary,
                             foregroundColor: AppColors.white,
                             padding: EdgeInsets.zero,
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             textStyle: const TextStyle(
                               fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
                             ),
                           ),
-                          child: const Text('Add to Cart'),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.shopping_bag_outlined,
+                                  size: 14),
+                              SizedBox(width: 4),
+                              Text('Add'),
+                            ],
+                          ),
                         ),
                       ),
                   ],

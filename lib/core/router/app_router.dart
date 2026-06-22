@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/profile_edit_screen.dart';
+import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
 import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
@@ -16,8 +20,6 @@ import '../../features/orders/presentation/screens/orders_list_screen.dart';
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/checkout/presentation/screens/checkout_screen.dart';
 import '../../features/contact/presentation/screens/contact_screen.dart';
-import '../../features/auth/presentation/screens/profile_edit_screen.dart';
-import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
 import '../../features/addresses/presentation/screens/address_form_screen.dart';
 
@@ -151,11 +153,16 @@ class AppRouter {
   }
 }
 
-class _MainShell extends StatelessWidget {
+class _MainShell extends ConsumerStatefulWidget {
   final Widget child;
 
   const _MainShell({required this.child});
 
+  @override
+  ConsumerState<_MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends ConsumerState<_MainShell> {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
@@ -166,47 +173,68 @@ class _MainShell extends StatelessWidget {
     if (location == '/account') currentIndex = 3;
 
     return Scaffold(
-      body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/cart');
-              break;
-            case 2:
-              context.go('/wishlist');
-              break;
-            case 3:
-              context.go('/account');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_outlined),
-            activeIcon: Icon(Icons.shopping_cart),
-            label: 'Cart',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Wishlist',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Account',
-          ),
-        ],
+      body: widget.child,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: currentIndex,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Theme.of(context).colorScheme.primary,
+          unselectedItemColor: Colors.grey,
+          onTap: (index) {
+            if (index == 1 || index == 2) {
+              final authState = ref.read(authProvider);
+              if (authState.status != AuthStatus.authenticated) {
+                context.push('/login');
+                return;
+              }
+            }
+            switch (index) {
+              case 0:
+                context.go('/');
+                break;
+              case 1:
+                context.go('/cart');
+                break;
+              case 2:
+                context.go('/wishlist');
+                break;
+              case 3:
+                context.go('/account');
+                break;
+            }
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined, color: currentIndex == 0 ? null : Colors.grey),
+              activeIcon: const Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_cart_outlined, color: currentIndex == 1 ? null : Colors.grey),
+              activeIcon: const Icon(Icons.shopping_cart),
+              label: 'Cart',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_outline, color: currentIndex == 2 ? null : Colors.grey),
+              activeIcon: const Icon(Icons.favorite),
+              label: 'Wishlist',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline, color: currentIndex == 3 ? null : Colors.grey),
+              activeIcon: const Icon(Icons.person),
+              label: 'Account',
+            ),
+          ],
+        ),
       ),
     );
   }
