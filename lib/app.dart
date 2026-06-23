@@ -20,14 +20,9 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
   late final GoRouter _router = AppRouter(_rootNavigatorKey, ref).router;
 
   @override
-  void initState() {
-    super.initState();
-    ref.listen(authProvider, (prev, next) {
-      if (prev?.status != AuthStatus.authenticated &&
-          next.status == AuthStatus.authenticated) {
-        _syncLocalCartToServer();
-      }
-    });
+  void dispose() {
+    _router.dispose();
+    super.dispose();
   }
 
   void _syncLocalCartToServer() {
@@ -45,13 +40,14 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
   }
 
   @override
-  void dispose() {
-    _router.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    ref.listen(authProvider, (prev, next) {
+      if (prev?.status != AuthStatus.authenticated &&
+          next.status == AuthStatus.authenticated) {
+        _syncLocalCartToServer();
+      }
+    });
+
     return MaterialApp.router(
       title: 'Lumora Nine',
       debugShowCheckedModeBanner: false,
