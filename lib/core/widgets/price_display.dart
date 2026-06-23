@@ -37,22 +37,28 @@ class PriceDisplay extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          Formatters.formatCurrency(discountedPrice!),
-          style: discountedPriceStyle ??
-              const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.priceDiscounted,
-              ),
+        Flexible(
+          child: Text(
+            Formatters.formatCurrency(discountedPrice!),
+            overflow: TextOverflow.ellipsis,
+            style: discountedPriceStyle ??
+                const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.priceDiscounted,
+                ),
+          ),
         ),
-        const SizedBox(width: 8),
-        Text(
-          Formatters.formatCurrency(price),
-          style: const TextStyle(
-            fontSize: 13,
-            decoration: TextDecoration.lineThrough,
-            color: AppColors.textHint,
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            Formatters.formatCurrency(price),
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              decoration: TextDecoration.lineThrough,
+              color: AppColors.textHint,
+            ),
           ),
         ),
       ],
