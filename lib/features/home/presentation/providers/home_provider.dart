@@ -9,9 +9,9 @@ final homeRepositoryProvider = Provider<HomeRepository>((ref) {
   return HomeRepository(CatalogRemoteSource(apiClient));
 });
 
-final heroSlidesProvider = FutureProvider<List<HeroSlide>>((ref) async {
+final heroSlidesProvider = FutureProvider<HeroSection>((ref) async {
   final repo = ref.read(homeRepositoryProvider);
-  return await repo.getHeroSlides();
+  return await repo.getHeroSection();
 });
 
 final offersProvider = FutureProvider<List<Offer>>((ref) async {

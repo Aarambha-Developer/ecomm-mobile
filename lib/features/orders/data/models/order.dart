@@ -7,8 +7,13 @@ class Order {
   final String? notes;
   final String? paymentMethod;
   final String? paymentStatus;
-  final String? couponCode;
+  final String? coupon;
   final double? discountAmount;
+  final int totalItems;
+  final double totalPrice;
+  final double subtotalPrice;
+  final Map<String, dynamic>? paymentProof;
+  final DateTime? updatedAt;
   final List<OrderItem> items;
   final DateTime createdAt;
 
@@ -21,8 +26,13 @@ class Order {
     this.notes,
     this.paymentMethod,
     this.paymentStatus,
-    this.couponCode,
+    this.coupon,
     this.discountAmount,
+    this.totalItems = 0,
+    this.totalPrice = 0,
+    this.subtotalPrice = 0,
+    this.paymentProof,
+    this.updatedAt,
     this.items = const [],
     required this.createdAt,
   });
@@ -45,8 +55,13 @@ class Order {
       notes: json['notes'] as String?,
       paymentMethod: json['payment_method_title'] as String?,
       paymentStatus: json['payment_status'] as String?,
-      couponCode: json['coupon_code'] as String?,
+      coupon: json['coupon'] as String? ?? json['coupon_code'] as String?,
       discountAmount: (json['discount_amount'] as num?)?.toDouble(),
+      totalItems: (json['total_items'] as num?)?.toInt() ?? 0,
+      totalPrice: (json['total_price'] as num?)?.toDouble() ?? 0,
+      subtotalPrice: (json['subtotal_price'] as num?)?.toDouble() ?? 0,
+      paymentProof: json['payment_proof'] as Map<String, dynamic>?,
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
       items: items,
       createdAt: _parseDate(json['created_at']),
     );
@@ -59,6 +74,7 @@ class Order {
   }
 
   bool get isPending => status == 'pending';
+  bool get isConfirmed => status == 'confirmed';
   bool get isProcessing => status == 'processing';
   bool get isShipped => status == 'shipped';
   bool get isDelivered => status == 'delivered';
@@ -69,6 +85,8 @@ class Order {
     switch (status) {
       case 'pending':
         return 'Pending';
+      case 'confirmed':
+        return 'Confirmed';
       case 'processing':
         return 'Processing';
       case 'shipped':

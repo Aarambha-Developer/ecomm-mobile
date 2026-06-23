@@ -43,6 +43,9 @@ class Product {
   final double rating;
   final String? primaryImage;
   final List<ProductImage> images;
+  final String? fullDescription;
+  final DateTime? createdAt;
+  final List<ProductReview> reviews;
 
   Product({
     required this.id,
@@ -63,6 +66,9 @@ class Product {
     this.rating = 0,
     this.primaryImage,
     this.images = const [],
+    this.fullDescription,
+    this.createdAt,
+    this.reviews = const [],
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -114,9 +120,45 @@ class Product {
       rating: parsePrice(json['rating']),
       primaryImage: primaryImageObj?['image'] as String?,
       images: parsedImages,
+      fullDescription: json['full_description'] as String?,
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
+      reviews: (json['reviews'] as List<dynamic>?)
+              ?.whereType<Map<String, dynamic>>()
+              .map((e) => ProductReview.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 
   bool get hasDiscount => discountPercentage > 0;
   bool get inStock => stockQuantity > 0;
+}
+
+class ProductReview {
+  final String id;
+  final String? user;
+  final int rating;
+  final String comment;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  const ProductReview({
+    required this.id,
+    this.user,
+    required this.rating,
+    required this.comment,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory ProductReview.fromJson(Map<String, dynamic> json) {
+    return ProductReview(
+      id: json['id']?.toString() ?? '',
+      user: json['user'] as String?,
+      rating: json['rating'] as int? ?? 0,
+      comment: json['comment'] as String? ?? '',
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
+    );
+  }
 }

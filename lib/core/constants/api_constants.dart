@@ -62,9 +62,11 @@ class ApiConstants {
   static const String adminCoupons = '/admin/coupons/';
 
   // Profile
+  // NOTE: The /auth/password/change/ endpoint does not exist in the current API spec.
   static const String changePassword = '/auth/password/change/';
 
   // Addresses
+  // NOTE: The /addresses/ endpoint does not exist in the current API spec.
   static const String addresses = '/addresses/';
 
   // Contact

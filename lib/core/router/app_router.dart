@@ -8,7 +8,8 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/profile_edit_screen.dart';
-import '../../features/auth/presentation/screens/change_password_screen.dart';
+// TODO: Re-enable when API endpoints are available
+// import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
 import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
@@ -21,9 +22,10 @@ import '../../features/orders/presentation/screens/orders_list_screen.dart';
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/checkout/presentation/screens/checkout_screen.dart';
 import '../../features/contact/presentation/screens/contact_screen.dart';
-import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
-import '../../features/addresses/presentation/screens/address_form_screen.dart';
-import '../../features/addresses/data/models/address.dart';
+// TODO: Re-enable when API endpoints are available
+// import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
+// import '../../features/addresses/presentation/screens/address_form_screen.dart';
+// import '../../features/addresses/data/models/address.dart';
 
 class AppRouter {
   final GlobalKey<NavigatorState> _rootNavigatorKey;
@@ -34,11 +36,11 @@ class AppRouter {
   static const _protectedRoutes = <String>{
     '/orders',
     '/checkout',
-    '/addresses',
-    '/addresses/add',
-    '/addresses/edit',
+    // '/addresses',
+    // '/addresses/add',
+    // '/addresses/edit',
     '/profile/edit',
-    '/profile/change-password',
+    // '/profile/change-password',
   };
 
   static const _authRoutes = <String>{
@@ -161,26 +163,28 @@ class AppRouter {
         path: '/profile/edit',
         builder: (context, state) => const ProfileEditScreen(),
       ),
-      GoRoute(
-        path: '/profile/change-password',
-        builder: (context, state) => const ChangePasswordScreen(),
-      ),
-      GoRoute(
-        path: '/addresses',
-        builder: (context, state) => const AddressesListScreen(),
-      ),
-      GoRoute(
-        path: '/addresses/add',
-        builder: (context, state) => const AddressFormScreen(),
-      ),
-      GoRoute(
-        path: '/addresses/edit',
-        builder: (context, state) {
-          return AddressFormScreen(
-            address: state.extra as Address?,
-          );
-        },
-      ),
+      // TODO: /profile/change-password route disabled - endpoint does not exist in API spec
+      // GoRoute(
+      //   path: '/profile/change-password',
+      //   builder: (context, state) => const ChangePasswordScreen(),
+      // ),
+      // TODO: /addresses routes disabled - /addresses/ endpoint does not exist in API spec
+      // GoRoute(
+      //   path: '/addresses',
+      //   builder: (context, state) => const AddressesListScreen(),
+      // ),
+      // GoRoute(
+      //   path: '/addresses/add',
+      //   builder: (context, state) => const AddressFormScreen(),
+      // ),
+      // GoRoute(
+      //   path: '/addresses/edit',
+      //   builder: (context, state) {
+      //     return AddressFormScreen(
+      //       address: state.extra as Address?,
+      //     );
+      //   },
+      // ),
     ],
   );
 

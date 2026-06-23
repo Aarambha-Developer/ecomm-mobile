@@ -5,6 +5,7 @@ class PaymentMethod {
   final String? qrImage;
   final String? accountName;
   final String? accountNumber;
+  final String? instructions;
   final bool isActive;
 
   const PaymentMethod({
@@ -14,6 +15,7 @@ class PaymentMethod {
     this.qrImage,
     this.accountName,
     this.accountNumber,
+    this.instructions,
     this.isActive = true,
   });
 
@@ -25,6 +27,7 @@ class PaymentMethod {
       qrImage: json['qr_image'] as String?,
       accountName: json['account_name'] as String?,
       accountNumber: json['account_number'] as String?,
+      instructions: json['instructions'] as String?,
       isActive: json['is_active'] as bool? ?? true,
     );
   }

@@ -71,10 +71,12 @@ class AccountScreen extends ConsumerWidget {
             _buildSection(context, 'Account Settings', [
               _menuItem(context, Icons.person_outline, 'Edit Profile',
                   onTap: () => context.push('/profile/edit')),
-              _menuItem(context, Icons.lock_outline, 'Change Password',
-                  onTap: () => context.push('/profile/change-password')),
-              _menuItem(context, Icons.location_on_outlined, 'My Addresses',
-                  onTap: () => context.push('/addresses')),
+              // TODO: 'Change Password' hidden - /auth/password/change/ endpoint does not exist in API spec
+              // _menuItem(context, Icons.lock_outline, 'Change Password',
+              //     onTap: () => context.push('/profile/change-password')),
+              // TODO: 'My Addresses' hidden - /addresses/ endpoint does not exist in API spec
+              // _menuItem(context, Icons.location_on_outlined, 'My Addresses',
+              //     onTap: () => context.push('/addresses')),
             ]),
             const SizedBox(height: 16),
           ],

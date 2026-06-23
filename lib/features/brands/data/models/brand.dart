@@ -12,10 +12,11 @@ class Brand {
   });
 
   factory Brand.fromJson(Map<String, dynamic> json) {
+    final slug = json['slug'] as String? ?? '';
     return Brand(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? slug,
       title: json['title'] as String? ?? '',
-      slug: json['slug'] as String? ?? '',
+      slug: slug,
       image: json['image'] as String?,
     );
   }

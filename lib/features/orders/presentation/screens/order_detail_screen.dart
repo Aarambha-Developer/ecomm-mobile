@@ -122,8 +122,8 @@ class OrderDetailScreen extends ConsumerWidget {
                       _SummaryRow(label: 'Subtotal', value: Formatters.formatCurrencyPlain(order.totalAmount)),
                       if (order.discountAmount != null && order.discountAmount! > 0)
                         _SummaryRow(
-                          label: order.couponCode != null
-                              ? 'Discount (${order.couponCode})'
+                          label: order.coupon != null
+                              ? 'Discount (${order.coupon})'
                               : 'Discount',
                           value: '- ${Formatters.formatCurrencyPlain(order.discountAmount!)}',
                           valueColor: AppColors.success,
@@ -173,7 +173,7 @@ class _OrderHeader extends StatelessWidget {
       statusColor = AppColors.success;
     } else if (order.isCancelled) {
       statusColor = AppColors.error;
-    } else if (order.isProcessing || order.isShipped) {
+    } else if (order.isConfirmed || order.isProcessing || order.isShipped) {
       statusColor = AppColors.warning;
     } else {
       statusColor = AppColors.textHint;

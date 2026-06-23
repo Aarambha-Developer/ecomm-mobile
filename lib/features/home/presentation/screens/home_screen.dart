@@ -95,7 +95,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _HeroSection extends ConsumerStatefulWidget {
-  final AsyncValue<List<HeroSlide>> heroAsync;
+  final AsyncValue<HeroSection> heroAsync;
 
   const _HeroSection({required this.heroAsync});
 
@@ -136,9 +136,9 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
   void _startAutoScroll() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 5), (_) {
-      final slides = widget.heroAsync.valueOrNull ?? [];
-      if (slides.isEmpty) return;
-      final next = (_displayedPage + 1) % slides.length;
+      final section = widget.heroAsync.valueOrNull;
+      if (section == null || section.slides.isEmpty) return;
+      final next = (_displayedPage + 1) % section.slides.length;
       _pageController.animateToPage(
         next,
         duration: const Duration(milliseconds: 600),
@@ -160,8 +160,8 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
     return widget.heroAsync.when(
       loading: () => _buildShimmer(),
       error: (_, _) => _buildStaticHero(context),
-      data: (slides) {
-        if (slides.isNotEmpty) return _buildCarousel(slides);
+      data: (section) {
+        if (section.slides.isNotEmpty) return _buildCarousel(section);
         return _buildStaticHero(context);
       },
     );
@@ -178,14 +178,14 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
     );
   }
 
-  Widget _buildCarousel(List<HeroSlide> slides) {
+  Widget _buildCarousel(HeroSection section) {
     return Column(
       children: [
         SizedBox(
           height: 280,
           child: PageView.builder(
             controller: _pageController,
-            itemCount: slides.length,
+            itemCount: section.slides.length,
             onPageChanged: (page) {
               setState(() {
                 _currentPage = page;
@@ -193,10 +193,10 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
               });
             },
             itemBuilder: (context, index) {
-              final slide = slides[index];
+              final slide = section.slides[index];
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildSlide(context, slide),
+                child: _buildSlide(context, section, slide),
               );
             },
           ),
@@ -204,7 +204,7 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(slides.length, (i) {
+          children: List.generate(section.slides.length, (i) {
             final isActive = i == _currentPage;
             return AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -223,10 +223,10 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
     );
   }
 
-  Widget _buildSlide(BuildContext context, HeroSlide slide) {
+  Widget _buildSlide(BuildContext context, HeroSection section, HeroSlide slide) {
     if (slide.image != null) {
       return GestureDetector(
-        onTap: () => _handleSlideTap(slide),
+        onTap: () => _handleSlideTap(section),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Stack(
@@ -235,7 +235,7 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
               CachedNetworkImage(
                 imageUrl: slide.image!,
                 fit: BoxFit.cover,
-                errorWidget: (_, _, _) => _buildGradientSlide(slide),
+                errorWidget: (_, _, _) => _buildGradientSlide(section),
               ),
               Container(
                 decoration: BoxDecoration(
@@ -258,7 +258,7 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      slide.title,
+                      section.title,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -266,10 +266,10 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
                         letterSpacing: -0.3,
                       ),
                     ),
-                    if (slide.subtitle != null) ...[
+                    if (section.subtitle != null) ...[
                       const SizedBox(height: 6),
                       Text(
-                        slide.subtitle!,
+                        section.subtitle!,
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 14,
@@ -284,12 +284,12 @@ class _HeroSectionState extends ConsumerState<_HeroSection>
         ),
       );
     }
-    return _buildGradientSlide(slide);
+    return _buildGradientSlide(section);
   }
 
-  Widget _buildGradientSlide(HeroSlide slide) {
+  Widget _buildGradientSlide(HeroSection section) {
     return GestureDetector(
-      onTap: () => _handleSlideTap(slide),
+      onTap: () => _handleSlideTap(section),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
@@ -309,7 +309,7 @@ children: [
               const Icon(Icons.spa, color: Colors.white, size: 32),
               const SizedBox(height: 12),
                 Text(
-                  slide.title,
+                  section.title,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
@@ -318,10 +318,10 @@ children: [
                     letterSpacing: -0.3,
                   ),
                 ),
-                if (slide.subtitle != null) ...[
+                if (section.subtitle != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    slide.subtitle!,
+                    section.subtitle!,
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white70, fontSize: 15),
                   ),
@@ -334,8 +334,8 @@ children: [
     );
   }
 
-  void _handleSlideTap(HeroSlide slide) {
-    final link = slide.link;
+  void _handleSlideTap(HeroSection section) {
+    final link = section.buttonLink;
     if (link != null) {
       if (link.startsWith('/')) {
         context.push(link);
@@ -587,7 +587,7 @@ class _OffersSection extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
-                                if (offer.discountText != null) ...[
+                                if (offer.buttonText != null) ...[
                                   const SizedBox(height: 10),
                                   Container(
                                     padding:
@@ -600,7 +600,7 @@ class _OffersSection extends StatelessWidget {
                                           BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      offer.discountText!,
+                                      offer.buttonText!,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w700,

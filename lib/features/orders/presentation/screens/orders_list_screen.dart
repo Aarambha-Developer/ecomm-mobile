@@ -183,7 +183,7 @@ class _StatusChip extends StatelessWidget {
       color = AppColors.success;
     } else if (order.isCancelled) {
       color = AppColors.error;
-    } else if (order.isProcessing || order.isShipped) {
+    } else if (order.isConfirmed || order.isProcessing || order.isShipped) {
       color = AppColors.warning;
     } else {
       color = AppColors.textHint;
