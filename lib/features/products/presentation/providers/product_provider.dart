@@ -19,6 +19,9 @@ class ProductFilters {
   final String? brandSlug;
   final double? priceMin;
   final double? priceMax;
+  final double? ratingMin;
+  final double? discountMin;
+  final int? stockMin;
   final String? ordering;
 
   const ProductFilters({
@@ -27,6 +30,9 @@ class ProductFilters {
     this.brandSlug,
     this.priceMin,
     this.priceMax,
+    this.ratingMin,
+    this.discountMin,
+    this.stockMin,
     this.ordering,
   });
 
@@ -36,11 +42,17 @@ class ProductFilters {
     String? brandSlug,
     double? priceMin,
     double? priceMax,
+    double? ratingMin,
+    double? discountMin,
+    int? stockMin,
     String? ordering,
     bool clearSearch = false,
     bool clearCategory = false,
     bool clearBrand = false,
     bool clearPrice = false,
+    bool clearRating = false,
+    bool clearDiscount = false,
+    bool clearStock = false,
   }) {
     return ProductFilters(
       search: clearSearch ? null : (search ?? this.search),
@@ -49,6 +61,9 @@ class ProductFilters {
       brandSlug: clearBrand ? null : (brandSlug ?? this.brandSlug),
       priceMin: clearPrice ? null : (priceMin ?? this.priceMin),
       priceMax: clearPrice ? null : (priceMax ?? this.priceMax),
+      ratingMin: clearRating ? null : (ratingMin ?? this.ratingMin),
+      discountMin: clearDiscount ? null : (discountMin ?? this.discountMin),
+      stockMin: clearStock ? null : (stockMin ?? this.stockMin),
       ordering: ordering ?? this.ordering,
     );
   }
@@ -121,6 +136,9 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
         brandSlug: state.filters.brandSlug,
         priceMin: state.filters.priceMin,
         priceMax: state.filters.priceMax,
+        ratingMin: state.filters.ratingMin,
+        discountMin: state.filters.discountMin,
+        stockMin: state.filters.stockMin,
         ordering: state.filters.ordering,
         page: refresh ? 1 : state.currentPage,
       );

@@ -15,6 +15,7 @@ import 'package:aarambha_app/core/widgets/star_rating.dart';
 import 'package:aarambha_app/core/widgets/discount_badge.dart';
 import 'package:aarambha_app/features/products/data/models/product.dart';
 import 'package:aarambha_app/features/products/presentation/providers/product_provider.dart';
+import 'package:aarambha_app/features/products/presentation/providers/review_provider.dart';
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -339,45 +340,289 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-class _TabbedContent extends StatelessWidget {
+class _TabbedContent extends ConsumerStatefulWidget {
   final Product product;
 
   const _TabbedContent({required this.product});
 
   @override
+  ConsumerState<_TabbedContent> createState() => _TabbedContentState();
+}
+
+class _TabbedContentState extends ConsumerState<_TabbedContent>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          const TabBar(
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textHint,
-            indicatorColor: AppColors.primary,
-            tabs: [
-              Tab(text: 'Description'),
-              Tab(text: 'Reviews'),
+    final product = widget.product;
+
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabController,
+          labelColor: AppColors.primary,
+          unselectedLabelColor: AppColors.textHint,
+          indicatorColor: AppColors.primary,
+          tabs: const [
+            Tab(text: 'Description'),
+            Tab(text: 'Reviews'),
+          ],
+        ),
+        SizedBox(
+          height: 400,
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(top: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (product.description != null &&
+                        product.description!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          product.description!,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    if (product.fullDescription != null &&
+                        product.fullDescription!.isNotEmpty)
+                      Text(
+                        product.fullDescription!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                  ],
+                ),
+              ),
+              _ReviewsTab(slug: product.slug),
             ],
           ),
-          SizedBox(
-            height: 300,
-            child: TabBarView(
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.only(top: 16),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReviewsTab extends ConsumerWidget {
+  final String slug;
+
+  const _ReviewsTab({required this.slug});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reviewsAsync = ref.watch(productReviewsProvider(slug));
+    final authState = ref.watch(authProvider);
+    final isLoggedIn = authState.status == AuthStatus.authenticated;
+
+    return Column(
+      children: [
+        Expanded(
+          child: reviewsAsync.when(
+            loading: () =>
+                const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            error: (e, _) => Center(
+              child: Text('Failed to load reviews: $e',
+                  style: const TextStyle(color: AppColors.textSecondary)),
+            ),
+            data: (reviews) {
+              if (reviews.isEmpty) {
+                return const Center(
                   child: Text(
-                    product.description ?? 'No description available.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-                const Center(
-                  child: Text(
-                    'No reviews yet.',
+                    'No reviews yet. Be the first to review!',
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
+                );
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.only(top: 16),
+                itemCount: reviews.length,
+                separatorBuilder: (_, _) =>
+                    const Divider(height: 1, color: AppColors.divider),
+                itemBuilder: (context, index) {
+                  final review = reviews[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              review.user ?? 'Anonymous',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const Spacer(),
+                            StarRating(rating: review.rating.toDouble()),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          review.comment,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        if (review.createdAt != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${review.createdAt!.year}-${review.createdAt!.month.toString().padLeft(2, '0')}-${review.createdAt!.day.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textHint,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        if (isLoggedIn)
+          _ReviewForm(
+            slug: slug,
+            onSubmit: () => ref.refresh(productReviewsProvider(slug)),
+          ),
+      ],
+    );
+  }
+}
+
+class _ReviewForm extends ConsumerStatefulWidget {
+  final String slug;
+  final VoidCallback onSubmit;
+
+  const _ReviewForm({required this.slug, required this.onSubmit});
+
+  @override
+  ConsumerState<_ReviewForm> createState() => _ReviewFormState();
+}
+
+class _ReviewFormState extends ConsumerState<_ReviewForm> {
+  int _rating = 5;
+  final _commentController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final comment = _commentController.text.trim();
+    if (comment.isEmpty) return;
+
+    setState(() => _isSubmitting = true);
+    try {
+      final repo = ref.read(reviewRepositoryProvider);
+      await repo.submitReview(
+        widget.slug,
+        rating: _rating,
+        comment: comment,
+      );
+      _commentController.clear();
+      setState(() => _rating = 5);
+      widget.onSubmit();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Review submitted!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        border: Border(top: BorderSide(color: AppColors.divider)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('Your rating: ',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              ...List.generate(5, (i) {
+                return GestureDetector(
+                  onTap: () => setState(() => _rating = i + 1),
+                  child: Icon(
+                    i < _rating ? Icons.star : Icons.star_border,
+                    color: AppColors.warning,
+                    size: 22,
+                  ),
+                );
+              }),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _commentController,
+                  decoration: InputDecoration(
+                    hintText: 'Write your review...',
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    isDense: true,
+                  ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child:
+                            CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Submit'),
+              ),
+            ],
           ),
         ],
       ),

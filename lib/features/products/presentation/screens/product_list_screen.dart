@@ -34,6 +34,8 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   String? _selectedOrdering;
   double? _priceMin;
   double? _priceMax;
+  double? _ratingMin;
+  double? _discountMin;
 
   @override
   void initState() {
@@ -83,10 +85,15 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         initialBrandSlug: widget.initialBrandSlug,
         initialPriceMin: _priceMin,
         initialPriceMax: _priceMax,
-        onApply: (categorySlug, brandSlug, priceMin, priceMax) {
+        initialRatingMin: _ratingMin,
+        initialDiscountMin: _discountMin,
+        onApply: (categorySlug, brandSlug, priceMin, priceMax,
+            ratingMin, discountMin) {
           setState(() {
             _priceMin = priceMin;
             _priceMax = priceMax;
+            _ratingMin = ratingMin;
+            _discountMin = discountMin;
           });
           ref.read(productListProvider.notifier).setFilters(
                 ProductFilters(
@@ -97,6 +104,8 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                   brandSlug: brandSlug,
                   priceMin: priceMin,
                   priceMax: priceMax,
+                  ratingMin: ratingMin,
+                  discountMin: discountMin,
                   ordering: _selectedOrdering,
                 ),
               );
@@ -298,14 +307,18 @@ class _FilterSheet extends ConsumerStatefulWidget {
   final String? initialBrandSlug;
   final double? initialPriceMin;
   final double? initialPriceMax;
+  final double? initialRatingMin;
+  final double? initialDiscountMin;
   final void Function(String? categorySlug, String? brandSlug,
-      double? priceMin, double? priceMax) onApply;
+      double? priceMin, double? priceMax, double? ratingMin, double? discountMin) onApply;
 
   const _FilterSheet({
     this.initialCategorySlug,
     this.initialBrandSlug,
     this.initialPriceMin,
     this.initialPriceMax,
+    this.initialRatingMin,
+    this.initialDiscountMin,
     required this.onApply,
   });
 
@@ -318,6 +331,8 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   String? _selectedBrand;
   final _priceMinController = TextEditingController();
   final _priceMaxController = TextEditingController();
+  double _ratingMin = 0;
+  double _discountMin = 0;
 
   @override
   void initState() {
@@ -330,6 +345,8 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     if (widget.initialPriceMax != null) {
       _priceMaxController.text = widget.initialPriceMax.toString();
     }
+    _ratingMin = widget.initialRatingMin ?? 0;
+    _discountMin = widget.initialDiscountMin ?? 0;
   }
 
   @override
@@ -376,6 +393,8 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                           _selectedBrand = null;
                           _priceMinController.clear();
                           _priceMaxController.clear();
+                          _ratingMin = 0;
+                          _discountMin = 0;
                         });
                       },
                       child: const Text('Clear All'),
@@ -477,21 +496,77 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Minimum Rating',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Slider(
+                        value: _ratingMin,
+                        min: 0,
+                        max: 5,
+                        divisions: 5,
+                        label: _ratingMin > 0 ? '${_ratingMin.round()}+ stars' : 'Any',
+                        onChanged: (v) => setState(() => _ratingMin = v),
+                      ),
+                    ),
+                    Text(
+                      _ratingMin > 0 ? '${_ratingMin.round()}+ stars' : 'Any',
+                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Minimum Discount',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Slider(
+                        value: _discountMin,
+                        min: 0,
+                        max: 100,
+                        divisions: 10,
+                        label: _discountMin > 0 ? '${_discountMin.round()}%+ off' : 'Any',
+                        onChanged: (v) => setState(() => _discountMin = v),
+                      ),
+                    ),
+                    Text(
+                      _discountMin > 0 ? '${_discountMin.round()}% off' : 'Any',
+                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 28),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      final priceMin = double.tryParse(_priceMinController.text);
-                      final priceMax = double.tryParse(_priceMaxController.text);
-                      widget.onApply(
-                        _selectedCategory,
-                        _selectedBrand,
-                        priceMin,
-                        priceMax,
-                      );
-                      Navigator.of(context).pop();
-                    },
+onPressed: () {
+                    final priceMin = double.tryParse(_priceMinController.text);
+                    final priceMax = double.tryParse(_priceMaxController.text);
+                    widget.onApply(
+                      _selectedCategory,
+                      _selectedBrand,
+                      priceMin,
+                      priceMax,
+                      _ratingMin > 0 ? _ratingMin : null,
+                      _discountMin > 0 ? _discountMin : null,
+                    );
+                    Navigator.of(context).pop();
+                  },
                     child: const Text('Apply Filters'),
                   ),
                 ),

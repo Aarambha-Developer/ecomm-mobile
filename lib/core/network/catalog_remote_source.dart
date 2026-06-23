@@ -39,6 +39,8 @@ class CatalogRemoteSource {
     double? priceMin,
     double? priceMax,
     double? ratingMin,
+    double? discountMin,
+    int? stockMin,
     String? ordering,
     bool? isActive,
     int page = 1,
@@ -53,6 +55,8 @@ class CatalogRemoteSource {
         if (priceMin != null) 'price__gte': priceMin,
         if (priceMax != null) 'price__lte': priceMax,
         if (ratingMin != null) 'rating__gte': ratingMin,
+        if (discountMin != null) 'discount_percentage__gte': discountMin,
+        if (stockMin != null) 'stock_quantity__gte': stockMin,
         if (ordering != null) 'ordering': ordering,
         if (isActive != null) 'is_active': isActive,
         'page': page,
@@ -69,6 +73,17 @@ class CatalogRemoteSource {
     return await _client.get(
       '${ApiConstants.products}$slug/reviews/',
       queryParameters: {'page': page},
+    );
+  }
+
+  Future<Map<String, dynamic>> postProductReview(
+    String slug, {
+    required int rating,
+    required String comment,
+  }) async {
+    return await _client.post(
+      '${ApiConstants.products}$slug/reviews/',
+      data: {'rating': rating, 'comment': comment},
     );
   }
 

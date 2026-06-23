@@ -16,6 +16,8 @@ class ProductRepository {
     double? priceMin,
     double? priceMax,
     double? ratingMin,
+    double? discountMin,
+    int? stockMin,
     String? ordering,
     int page = 1,
   }) async {
@@ -26,6 +28,8 @@ class ProductRepository {
       priceMin: priceMin,
       priceMax: priceMax,
       ratingMin: ratingMin,
+      discountMin: discountMin,
+      stockMin: stockMin,
       ordering: ordering,
       page: page,
       pageSize: AppConstants.pageSize,
