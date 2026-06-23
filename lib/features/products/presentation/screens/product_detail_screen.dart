@@ -60,21 +60,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 quantity: _quantity,
                 onQuantityChanged: (q) => setState(() => _quantity = q),
                 onAddToCart: () {
+                  ref.read(localCartProvider.notifier).addItem(
+                        productId: product.id,
+                        productName: product.name,
+                        productImage: product.primaryImage,
+                        price: product.hasDiscount
+                            ? product.discountedPrice
+                            : product.price,
+                        quantity: _quantity,
+                      );
                   final authState = ref.read(authProvider);
-                  final price = product.hasDiscount
-                      ? product.discountedPrice
-                      : product.price;
                   if (authState.status == AuthStatus.authenticated) {
                     ref.read(cartProvider.notifier).addItem(
                           productId: product.id,
-                          quantity: _quantity,
-                        );
-                  } else {
-                    ref.read(localCartProvider.notifier).addItem(
-                          productId: product.id,
-                          productName: product.name,
-                          productImage: product.primaryImage,
-                          price: price,
                           quantity: _quantity,
                         );
                   }

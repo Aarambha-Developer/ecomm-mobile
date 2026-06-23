@@ -714,21 +714,19 @@ class _ProductsGrid extends ConsumerWidget {
                 product: product,
                 onTap: () => context.push('/products/${product.slug}'),
                 onAddToCart: () {
+                  ref.read(localCartProvider.notifier).addItem(
+                        productId: product.id,
+                        productName: product.name,
+                        productImage: product.primaryImage,
+                        price: product.discountedPrice > 0
+                            ? product.discountedPrice
+                            : product.price,
+                        quantity: 1,
+                      );
                   final authState = ref.read(authProvider);
                   if (authState.status == AuthStatus.authenticated) {
                     ref.read(cartProvider.notifier).addItem(
                           productId: product.id,
-                          quantity: 1,
-                        );
-                  } else {
-                    ref.read(localCartProvider.notifier).addItem(
-                          productId: product.id,
-                          productName: product.name,
-                          productImage:
-                              product.primaryImage,
-                          price: product.discountedPrice > 0
-                              ? product.discountedPrice
-                              : product.price,
                           quantity: 1,
                         );
                   }
