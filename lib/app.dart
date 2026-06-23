@@ -25,13 +25,13 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
     super.dispose();
   }
 
-  void _syncLocalCartToServer() {
+  Future<void> _syncLocalCartToServer() async {
     final localItems = ref.read(localCartProvider).items;
     if (localItems.isEmpty) return;
 
     final cartNotifier = ref.read(cartProvider.notifier);
     for (final item in localItems) {
-      cartNotifier.addItem(
+      await cartNotifier.addItem(
         productId: item.productId,
         quantity: item.quantity,
       );

@@ -14,27 +14,27 @@ class CartRepository {
   }
 
   Future<Cart> addItem({required String productId, int quantity = 1}) async {
-    final response = await _remoteSource.addItem(
+    await _remoteSource.addItem(
       productId: productId,
       quantity: quantity,
     );
-    return Cart.fromJson(response['data'] as Map<String, dynamic>);
+    return await getCart();
   }
 
   Future<Cart> updateItemQuantity({
     required String itemId,
     required int quantity,
   }) async {
-    final response = await _remoteSource.updateItemQuantity(
+    await _remoteSource.updateItemQuantity(
       itemId: itemId,
       quantity: quantity,
     );
-    return Cart.fromJson(response['data'] as Map<String, dynamic>);
+    return await getCart();
   }
 
   Future<Cart> removeItem(String itemId) async {
     await _remoteSource.removeItem(itemId);
-    return const Cart(id: '');
+    return await getCart();
   }
 
   Future<void> clearCart() async {

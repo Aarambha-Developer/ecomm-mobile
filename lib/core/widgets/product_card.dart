@@ -42,7 +42,7 @@ class _ProductCardState extends State<ProductCard> {
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
 child: Container(
-          height: 280,
+          height: 290,
           decoration: BoxDecoration(
             color: AppColors.white,
             borderRadius: BorderRadius.circular(16),
@@ -120,7 +120,7 @@ child: Container(
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -148,7 +148,7 @@ child: Container(
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       PriceDisplay(
                         price: product.price,
                         discountedPrice: product.discountedPrice,

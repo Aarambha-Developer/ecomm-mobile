@@ -31,8 +31,11 @@ class CartNotifier extends StateNotifier<AsyncValue<Cart>> {
       }
       final cart = await _repository.getCart();
       state = AsyncValue.data(cart);
-} catch (_) {
-      state = const AsyncValue.data(Cart(id: ''));
+    } catch (_) {
+      final previous = state;
+      if (previous is! AsyncData) {
+        state = const AsyncValue.data(Cart(id: ''));
+      }
     }
   }
 
@@ -40,14 +43,17 @@ class CartNotifier extends StateNotifier<AsyncValue<Cart>> {
     required String productId,
     int quantity = 1,
   }) async {
+    final previous = state;
     try {
       final cart = await _repository.addItem(
         productId: productId,
         quantity: quantity,
       );
       state = AsyncValue.data(cart);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e, _) {
+      if (previous is AsyncData) {
+        state = previous;
+      }
     }
   }
 

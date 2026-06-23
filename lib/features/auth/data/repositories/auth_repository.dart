@@ -115,7 +115,17 @@ class AuthRepository {
     if (email != null) data['email'] = email;
     if (phoneNumber != null) data['phone_number'] = phoneNumber;
     final response = await _remoteSource.updateProfile(data);
-    return AuthUser.fromJson(response['data'] as Map<String, dynamic>);
+    final responseData = response['data'];
+    if (responseData is Map<String, dynamic>) {
+      return AuthUser.fromJson(responseData);
+    }
+    return AuthUser(
+      id: '',
+      email: email ?? '',
+      phoneNumber: phoneNumber,
+      fullName: fullName,
+      role: 'user',
+    );
   }
 
   Future<void> changePassword({
