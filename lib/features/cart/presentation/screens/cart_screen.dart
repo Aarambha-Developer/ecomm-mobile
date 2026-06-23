@@ -47,8 +47,23 @@ class CartScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: isLoggedIn ? _buildServerCart(context, ref, serverCart) : _buildLocalCart(context, ref, localCart),
+      body: _buildCartBody(context, ref, isLoggedIn, serverCart, localCart),
     );
+  }
+
+  Widget _buildCartBody(BuildContext context, WidgetRef ref, bool isLoggedIn,
+      AsyncValue<Cart> serverCart, LocalCart localCart) {
+    if (isLoggedIn) {
+      final serverData = serverCart.valueOrNull;
+      if (serverData != null && serverData.items.isNotEmpty) {
+        return _buildServerCart(context, ref, serverCart);
+      }
+      if (localCart.items.isNotEmpty) {
+        return _buildLocalCart(context, ref, localCart);
+      }
+      return _buildServerCart(context, ref, serverCart);
+    }
+    return _buildLocalCart(context, ref, localCart);
   }
 
   Widget _buildServerCart(BuildContext context, WidgetRef ref, AsyncValue<Cart> cartAsync) {

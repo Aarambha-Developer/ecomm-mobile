@@ -29,14 +29,21 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
     final localItems = ref.read(localCartProvider).items;
     if (localItems.isEmpty) return;
 
+    bool allSucceeded = true;
     final cartNotifier = ref.read(cartProvider.notifier);
     for (final item in localItems) {
-      await cartNotifier.addItem(
-        productId: item.productId,
-        quantity: item.quantity,
-      );
+      try {
+        await cartNotifier.addItem(
+          productId: item.productId,
+          quantity: item.quantity,
+        );
+      } catch (_) {
+        allSucceeded = false;
+      }
     }
-    ref.read(localCartProvider.notifier).clear();
+    if (allSucceeded) {
+      ref.read(localCartProvider.notifier).clear();
+    }
   }
 
   @override
