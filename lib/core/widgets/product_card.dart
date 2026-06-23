@@ -41,24 +41,25 @@ class _ProductCardState extends State<ProductCard> {
         scale: _isPressed ? 0.97 : 1.0,
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
-        child: Container(
+child: Container(
+          height: 280,
           decoration: BoxDecoration(
             color: AppColors.white,
             borderRadius: BorderRadius.circular(16),
-boxShadow: const [
+            boxShadow: const [
               BoxShadow(
                 color: AppColors.cardShadow,
                 blurRadius: 12,
                 offset: Offset(0, 4),
               ),
-          ],
+            ],
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 5,
+              SizedBox(
+                height: 160,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -118,7 +119,6 @@ boxShadow: const [
                 ),
               ),
               Expanded(
-                flex: 4,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                   child: Column(
@@ -148,7 +148,7 @@ boxShadow: const [
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const Spacer(),
+                      const SizedBox(height: 6),
                       PriceDisplay(
                         price: product.price,
                         discountedPrice: product.discountedPrice,
@@ -164,29 +164,27 @@ boxShadow: const [
                           color: AppColors.priceDiscounted,
                         ),
                       ),
+                      const Spacer(),
                       if (widget.onAddToCart != null && product.stockQuantity > 0)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 32,
-                            child: ElevatedButton(
-                              onPressed: widget.onAddToCart,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: AppColors.white,
-                                padding: EdgeInsets.zero,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                textStyle: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 32,
+                          child: ElevatedButton(
+                            onPressed: widget.onAddToCart,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.white,
+                              padding: EdgeInsets.zero,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Text('Add to Cart'),
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
+                            child: const Text('Add to Cart'),
                           ),
                         ),
                     ],

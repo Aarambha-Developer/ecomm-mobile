@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'core/storage/local_cart_provider.dart';
+import 'features/auth/presentation/providers/auth_provider.dart';
+import 'features/cart/presentation/providers/cart_provider.dart';
 
 class AarambhaApp extends ConsumerStatefulWidget {
   const AarambhaApp({super.key});
@@ -14,8 +17,32 @@ class AarambhaApp extends ConsumerStatefulWidget {
 class _AarambhaAppState extends ConsumerState<AarambhaApp> {
   late final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>();
-  late final GoRouter _router =
-      AppRouter(_rootNavigatorKey, ref).router;
+  late final GoRouter _router = AppRouter(_rootNavigatorKey, ref).router;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listen(authProvider, (prev, next) {
+      if (prev?.status != AuthStatus.authenticated &&
+          next.status == AuthStatus.authenticated) {
+        _syncLocalCartToServer();
+      }
+    });
+  }
+
+  void _syncLocalCartToServer() {
+    final localItems = ref.read(localCartProvider).items;
+    if (localItems.isEmpty) return;
+
+    final cartNotifier = ref.read(cartProvider.notifier);
+    for (final item in localItems) {
+      cartNotifier.addItem(
+        productId: item.productId,
+        quantity: item.quantity,
+      );
+    }
+    ref.read(localCartProvider.notifier).clear();
+  }
 
   @override
   void dispose() {
