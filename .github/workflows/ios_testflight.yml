@@ -46,7 +46,7 @@ jobs:
         run: flutter build ios --release 
 
       - name: 🚀 Run Fastlane & Upload to TestFlight
-        cd ios
+        working-directory: ios
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
