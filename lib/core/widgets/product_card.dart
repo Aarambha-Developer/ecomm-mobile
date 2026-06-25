@@ -59,7 +59,7 @@ class _ProductCardState extends State<ProductCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                height: 126,
+                height: 118,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -132,7 +132,7 @@ class _ProductCardState extends State<ProductCard> {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -158,7 +158,7 @@ class _ProductCardState extends State<ProductCard> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                       ],
                       Text(
                         product.name,
@@ -171,7 +171,7 @@ class _ProductCardState extends State<ProductCard> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       PriceDisplay(
                         price: product.price,
                         discountedPrice: product.discountedPrice,
@@ -191,7 +191,7 @@ class _ProductCardState extends State<ProductCard> {
                       if (widget.onAddToCart != null && product.stockQuantity > 0)
                         SizedBox(
                           width: double.infinity,
-                          height: 36,
+                          height: 32,
                           child: ElevatedButton(
                             onPressed: widget.onAddToCart,
                             style: ElevatedButton.styleFrom(
@@ -200,10 +200,10 @@ class _ProductCardState extends State<ProductCard> {
                               padding: EdgeInsets.zero,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               textStyle: const TextStyle(
-                                fontSize: 12.5,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),

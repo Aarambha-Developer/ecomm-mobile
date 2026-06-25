@@ -847,7 +847,7 @@ class _ProductsGrid extends ConsumerWidget {
             itemCount: products.length + (productsState.isLoadingMore ? 2 : 0),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.65,
+              childAspectRatio: 0.68,
               crossAxisSpacing: 8,
               mainAxisSpacing: 12,
             ),
