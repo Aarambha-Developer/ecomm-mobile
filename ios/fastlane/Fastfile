@@ -13,11 +13,19 @@ platform :ios do
     )
 
     # 2. Build the iOS Archive (IPA)
+    disable_automatic_code_signing(path: "Runner.xcodeproj")
+
     build_app(
       workspace: "Runner.xcworkspace", 
       scheme: "Runner",
       export_method: "app-store",
-      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' DEVELOPMENT_TEAM='W98N32D5AW'"
+      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' DEVELOPMENT_TEAM='W98N32D5AW' PROVISIONING_PROFILE_SPECIFIER='#{ENV['PROVISIONING_PROFILE_NAME']}'",
+      export_options: {
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "com.aarambhait.lumoranine" => ENV["PROVISIONING_PROFILE_NAME"]
+        }
+      }
     )
 
     # 3. Upload the IPA to TestFlight

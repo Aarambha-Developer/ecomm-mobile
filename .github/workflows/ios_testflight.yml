@@ -36,15 +36,27 @@ jobs:
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
+          # Decode provisioning profile to plist to extract info
+          security cms -D -i $PP_PATH > $RUNNER_TEMP/decoded_profile.plist
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" $RUNNER_TEMP/decoded_profile.plist)
+          NAME=$(/usr/libexec/PlistBuddy -c "Print Name" $RUNNER_TEMP/decoded_profile.plist)
+
+          echo "PROVISIONING_PROFILE_UUID=$UUID" >> $GITHUB_ENV
+          echo "PROVISIONING_PROFILE_NAME=$NAME" >> $GITHUB_ENV
+
+          # Create keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security default-keychain -s $KEYCHAIN_PATH
 
+          # Import certificate
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+          security list-keychains -d user -s $KEYCHAIN_PATH
 
+          # Install provisioning profile using UUID filename as required by Xcode
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
 
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
@@ -57,4 +69,6 @@ jobs:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+          PROVISIONING_PROFILE_NAME: ${{ env.PROVISIONING_PROFILE_NAME }}
+          PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
         run: fastlane beta
