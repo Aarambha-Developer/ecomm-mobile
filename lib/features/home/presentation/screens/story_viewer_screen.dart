@@ -112,23 +112,70 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with TickerProvid
   }
 
   void _handleLinkTapped(String? link) {
-    if (link == null || link.isEmpty) return;
+    if (link == null || link.trim().isEmpty) return;
 
-    final uri = Uri.parse(link);
-    final pathSegments = uri.pathSegments;
+    try {
+      final uri = Uri.parse(link);
+      final path = uri.path;
+      final pathSegments = uri.pathSegments;
 
-    String? productSlug;
-    for (int i = 0; i < pathSegments.length - 1; i++) {
-      if (pathSegments[i] == 'products') {
-        productSlug = pathSegments[i + 1];
-        break;
+      // Check if it matches a product detail: e.g. /products/slug-name
+      if (pathSegments.contains('products')) {
+        final productsIdx = pathSegments.indexOf('products');
+        if (productsIdx < pathSegments.length - 1) {
+          final slug = pathSegments[productsIdx + 1];
+          context.push('/products/$slug');
+          Navigator.of(context).pop();
+          return;
+        } else {
+          // It's just "/products" - check query params
+          final categoryParam = uri.queryParameters['category'];
+          if (categoryParam != null && categoryParam.isNotEmpty) {
+            context.push('/categories/$categoryParam');
+          } else {
+            context.push('/products');
+          }
+          Navigator.of(context).pop();
+          return;
+        }
       }
-    }
 
-    if (productSlug != null) {
-      context.push('/products/$productSlug');
-      Navigator.of(context).pop();
-    } else {
+      // Check if it points to a category directly: e.g. /categories/slug-name
+      if (pathSegments.contains('categories')) {
+        final idx = pathSegments.indexOf('categories');
+        if (idx < pathSegments.length - 1) {
+          final slug = pathSegments[idx + 1];
+          context.push('/categories/$slug');
+          Navigator.of(context).pop();
+          return;
+        }
+      }
+
+      // Check if it points to a brand: e.g. /brands/slug-name
+      if (pathSegments.contains('brands')) {
+        final idx = pathSegments.indexOf('brands');
+        if (idx < pathSegments.length - 1) {
+          final slug = pathSegments[idx + 1];
+          context.push('/brands/$slug');
+          Navigator.of(context).pop();
+          return;
+        }
+      }
+
+      // Fallback for general relative path
+      if (path.startsWith('/')) {
+        context.push(path);
+        Navigator.of(context).pop();
+        return;
+      }
+      
+      // If it's the root domain (or home)
+      if (path == '/' || path.isEmpty) {
+        context.go('/');
+        Navigator.of(context).pop();
+        return;
+      }
+    } catch (_) {
       if (link.startsWith('/')) {
         context.push(link);
         Navigator.of(context).pop();
@@ -314,7 +361,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with TickerProvid
                               ),
                               child: Center(
                                 child: Text(
-                                  story.buttonText ?? 'Shop Now',
+                                  (story.buttonText != null && story.buttonText!.trim().isNotEmpty)
+                                      ? story.buttonText!
+                                      : 'Shop Now',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
