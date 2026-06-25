@@ -38,7 +38,11 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen> with Tick
   void _markCurrentStoryAsViewed() {
     if (widget.stories.isNotEmpty && _currentIndex >= 0 && _currentIndex < widget.stories.length) {
       final storyId = widget.stories[_currentIndex].id;
-      ref.read(viewedStoriesProvider.notifier).markAsViewed(storyId);
+      Future.microtask(() {
+        if (mounted) {
+          ref.read(viewedStoriesProvider.notifier).markAsViewed(storyId);
+        }
+      });
     }
   }
 
