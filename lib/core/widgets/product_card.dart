@@ -136,7 +136,7 @@ class _ProductCardState extends State<ProductCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (product.brandName != null)
+                      if (product.brandName != null) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -158,7 +158,8 @@ class _ProductCardState extends State<ProductCard> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      const SizedBox(height: 6),
+                        const SizedBox(height: 6),
+                      ],
                       Text(
                         product.name,
                         style: const TextStyle(
