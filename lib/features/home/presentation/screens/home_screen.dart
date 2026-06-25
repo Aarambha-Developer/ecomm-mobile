@@ -476,44 +476,83 @@ class _StoriesSection extends ConsumerWidget {
                   },
                   child: Column(
                     children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: isViewed
-                              ? Border.all(color: Colors.grey.shade300, width: 1.5)
-                              : null,
-                          gradient: isViewed
-                              ? null
-                              : const LinearGradient(
-                                  colors: [AppColors.primary, AppColors.accent],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: isViewed
+                                  ? Border.all(color: Colors.grey.shade300, width: 1.5)
+                                  : null,
+                              gradient: isViewed
+                                  ? null
+                                  : const LinearGradient(
+                                      colors: [AppColors.primary, AppColors.accent],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.cardShadow,
+                                  blurRadius: isViewed ? 2 : 8,
+                                  offset: Offset(0, isViewed ? 1 : 3),
                                 ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.cardShadow,
-                              blurRadius: isViewed ? 2 : 8,
-                              offset: Offset(0, isViewed ? 1 : 3),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          backgroundColor: AppColors.surface,
-                          child: ClipOval(
-                            child: imageUrl != null
-                                ? CachedNetworkImage(
-                                    imageUrl: imageUrl,
-                                    width: 66,
-                                    height: 66,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (_, _, _) => _storyFallback(),
-                                  )
-                                : _storyFallback(),
+                            child: CircleAvatar(
+                              backgroundColor: AppColors.surface,
+                              child: ClipOval(
+                                child: imageUrl != null
+                                    ? CachedNetworkImage(
+                                        imageUrl: imageUrl,
+                                        width: 66,
+                                        height: 66,
+                                        fit: BoxFit.cover,
+                                        errorWidget: (_, _, _) => _storyFallback(),
+                                      )
+                                    : _storyFallback(),
+                              ),
+                            ),
                           ),
-                        ),
+                          if (story.discountType != null && story.discountValue != null)
+                            Positioned(
+                              right: -4,
+                              bottom: -2,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFE5A93B), Color(0xFFC49030)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.white, width: 1),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 3,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  story.discountType == 'percentage'
+                                      ? '${story.discountValue! % 1 == 0 ? story.discountValue!.toInt() : story.discountValue}%'
+                                      : '\$${story.discountValue! % 1 == 0 ? story.discountValue!.toInt() : story.discountValue}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 8.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 6),
                       SizedBox(
@@ -715,6 +754,10 @@ class _OffersSection extends StatelessWidget {
                                   CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                if (offer.discountType != null && offer.discountValue != null) ...[
+                                  _buildDiscountBadge(offer)!,
+                                  const SizedBox(height: 6),
+                                ],
                                 Text(
                                   offer.title,
                                   style: const TextStyle(
@@ -773,6 +816,47 @@ class _OffersSection extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget? _buildDiscountBadge(Offer offer) {
+    if (offer.discountType == null || offer.discountValue == null) return null;
+    final String text;
+    if (offer.discountType == 'percentage') {
+      final valStr = offer.discountValue! % 1 == 0 ? offer.discountValue!.toInt().toString() : offer.discountValue!.toString();
+      text = '$valStr% OFF';
+    } else if (offer.discountType == 'fixed') {
+      final valStr = offer.discountValue! % 1 == 0 ? offer.discountValue!.toInt().toString() : offer.discountValue!.toString();
+      text = 'Flat \$$valStr OFF';
+    } else {
+      return null;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFE5A93B), Color(0xFFC49030)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 2,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 9.5,
+        ),
+      ),
     );
   }
 
@@ -847,7 +931,7 @@ class _ProductsGrid extends ConsumerWidget {
             itemCount: products.length + (productsState.isLoadingMore ? 2 : 0),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.68,
+              childAspectRatio: 0.63,
               crossAxisSpacing: 8,
               mainAxisSpacing: 12,
             ),

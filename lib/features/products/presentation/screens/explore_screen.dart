@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/features/products/presentation/providers/product_provider.dart';
 import 'package:aarambha_app/core/widgets/product_card.dart';
+import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
+import 'package:aarambha_app/features/wishlist/presentation/providers/wishlist_provider.dart';
+import 'package:aarambha_app/core/storage/local_cart_provider.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
@@ -40,6 +45,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(productListProvider);
+    final wishlistState = ref.watch(wishlistProvider);
+    final authState = ref.watch(authProvider);
 
     return Scaffold(
       body: RefreshIndicator(
@@ -96,14 +103,47 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.68,
+                    childAspectRatio: 0.63,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 12,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final product = state.products[index];
-                      return ProductCard(product: product);
+                      final isWishlisted = wishlistState.valueOrNull?.items
+                              .any((item) => item.product.id == product.id) ??
+                          false;
+
+                      return ProductCard(
+                        product: product,
+                        isWishlisted: isWishlisted,
+                        onTap: () => context.push('/products/${product.slug}'),
+                        onAddToCart: () {
+                          ref.read(localCartProvider.notifier).addItem(
+                                productId: product.id,
+                                productName: product.name,
+                                productImage: product.primaryImage,
+                                price: product.discountedPrice > 0
+                                    ? product.discountedPrice
+                                    : product.price,
+                                quantity: 1,
+                              );
+                          if (authState.status == AuthStatus.authenticated) {
+                            ref.read(cartProvider.notifier).addItem(
+                                  productId: product.id,
+                                  quantity: 1,
+                                );
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${product.name} added to cart'),
+                            ),
+                          );
+                        },
+                        onToggleWishlist: () {
+                          ref.read(wishlistProvider.notifier).toggleItem(product.id);
+                        },
+                      );
                     },
                     childCount: state.products.length,
                   ),

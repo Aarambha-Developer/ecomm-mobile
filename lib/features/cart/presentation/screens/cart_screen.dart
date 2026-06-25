@@ -44,8 +44,26 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     });
 
     try {
+      final isLoggedIn = ref.read(authProvider).status == AuthStatus.authenticated;
+      String cartTotal;
+      List<String> productIds;
+
+      if (isLoggedIn) {
+        final cart = ref.read(cartProvider).valueOrNull;
+        cartTotal = (cart?.totalAmount ?? 0.0).toStringAsFixed(2);
+        productIds = cart?.items.map((i) => i.productId).where((id) => id.isNotEmpty).toList() ?? [];
+      } else {
+        final cart = ref.read(localCartProvider);
+        cartTotal = cart.totalAmount.toStringAsFixed(2);
+        productIds = cart.items.map((i) => i.productId).where((id) => id.isNotEmpty).toList();
+      }
+
       final service = PaymentApiService(ref.read(apiClientProvider));
-      final rate = await service.validateCoupon(code);
+      final rate = await service.validateCoupon(
+        code: code,
+        cartTotal: cartTotal,
+        productIds: productIds,
+      );
       setState(() {
         _couponDiscountRate = rate;
         _appliedCouponCode = code;

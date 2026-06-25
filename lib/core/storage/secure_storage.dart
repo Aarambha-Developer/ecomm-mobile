@@ -40,4 +40,18 @@ class SecureStorage {
     final access = await _storage.read(key: _accessTokenKey);
     return access != null;
   }
+
+  Future<void> saveFullName(String emailOrId, String name) async {
+    await _storage.write(key: 'user_fullname_$emailOrId', value: name);
+  }
+
+  Future<String?> getFullName(String emailOrId) async {
+    return await _storage.read(key: 'user_fullname_$emailOrId');
+  }
+
+  Future<void> clearFullName(String emailOrId) async {
+    try {
+      await _storage.delete(key: 'user_fullname_$emailOrId');
+    } catch (_) {}
+  }
 }

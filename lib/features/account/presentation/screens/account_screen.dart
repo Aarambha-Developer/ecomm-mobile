@@ -92,6 +92,8 @@ class AccountScreen extends ConsumerWidget {
               _buildSection(context, 'Account Settings', [
                 _menuItem(context, Icons.person_outline, 'Edit Profile',
                     onTap: () => context.push('/profile/edit')),
+                _menuItem(context, Icons.lock_outline, 'Change Password',
+                    onTap: () => context.push('/profile/change-password')),
               ]),
               const SizedBox(height: 14),
             ] else ...[

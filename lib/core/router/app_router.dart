@@ -7,8 +7,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/profile_edit_screen.dart';
-// TODO: Re-enable when API endpoints are available
-// import '../../features/auth/presentation/screens/change_password_screen.dart';
+import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/home/presentation/screens/main_layout_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
 import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
@@ -191,11 +190,10 @@ class AppRouter {
         path: '/profile/edit',
         builder: (context, state) => const ProfileEditScreen(),
       ),
-      // TODO: /profile/change-password route disabled - endpoint does not exist in API spec
-      // GoRoute(
-      //   path: '/profile/change-password',
-      //   builder: (context, state) => const ChangePasswordScreen(),
-      // ),
+      GoRoute(
+        path: '/profile/change-password',
+        builder: (context, state) => const ChangePasswordScreen(),
+      ),
       // TODO: /addresses routes disabled - /addresses/ endpoint does not exist in API spec
       // GoRoute(
       //   path: '/addresses',

@@ -29,8 +29,16 @@ class CheckoutRepository {
     return CheckoutResult.fromJson(response['data'] as Map<String, dynamic>);
   }
 
-  Future<double> validateCoupon(String code) async {
-    final response = await _remoteSource.validateCoupon(code);
+  Future<double> validateCoupon({
+    required String code,
+    required String cartTotal,
+    required List<String> productIds,
+  }) async {
+    final response = await _remoteSource.validateCoupon(
+      code: code,
+      cartTotal: cartTotal,
+      productIds: productIds,
+    );
     final data = response['data'] as Map<String, dynamic>;
     final rate = data['discount_rate'];
     if (rate is num) return rate.toDouble();

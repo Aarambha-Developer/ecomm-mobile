@@ -1012,6 +1012,17 @@ paths:
           * `story` - Story
           * `hero-banner` - Hero Banner
       - in: query
+        name: discount_type
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - fixed
+          - percentage
+        description: |-
+          * `percentage` - Percentage
+          * `fixed` - Fixed Amount
+      - in: query
         name: is_active
         schema:
           type: boolean
@@ -2417,6 +2428,31 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/auth/me/change-password/:
+    post:
+      operationId: auth_me_change_password_create
+      description: Base API view with common functionality.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+        required: true
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/auth/password-reset/confirm/:
     post:
       operationId: auth_password_reset_confirm_create
@@ -2974,6 +3010,17 @@ paths:
           * `popup-ad` - Popup Ad
           * `story` - Story
           * `hero-banner` - Hero Banner
+      - in: query
+        name: discount_type
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - fixed
+          - percentage
+        description: |-
+          * `percentage` - Percentage
+          * `fixed` - Fixed Amount
       - name: ordering
         required: false
         in: query
@@ -3602,6 +3649,9 @@ components:
       - is_email_verified
       - phone_number
       - username
+    BlankEnum:
+      enum:
+      - ''
     Brand:
       type: object
       properties:
@@ -3852,6 +3902,25 @@ components:
       required:
       - name
       - slug
+    ChangePasswordRequest:
+      type: object
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        confirm_new_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - confirm_new_password
+      - new_password
+      - old_password
     ContactSubmission:
       type: object
       properties:
@@ -3944,6 +4013,8 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        coupon_type:
+          $ref: '#/components/schemas/CouponTypeEnum'
         is_active:
           type: boolean
         valid_from:
@@ -3963,6 +4034,24 @@ components:
         used_count:
           type: integer
           readOnly: true
+        min_cart_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_brand:
+          type: string
+          format: uuid
+          nullable: true
+        target_category:
+          type: string
+          format: uuid
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -3989,6 +4078,8 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        coupon_type:
+          $ref: '#/components/schemas/CouponTypeEnum'
         is_active:
           type: boolean
         valid_from:
@@ -4005,9 +4096,39 @@ components:
           minimum: 0
           format: int64
           nullable: true
+        min_cart_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_brand:
+          type: string
+          format: uuid
+          nullable: true
+        target_category:
+          type: string
+          format: uuid
+          nullable: true
       required:
       - code
       - discount_rate
+    CouponTypeEnum:
+      enum:
+      - cart_total
+      - brand
+      - category
+      - product
+      type: string
+      description: |-
+        * `cart_total` - Cart Total
+        * `brand` - Brand-wide
+        * `category` - Category-wide
+        * `product` - Specific Products
     CouponValidate:
       type: object
       properties:
@@ -4015,6 +4136,15 @@ components:
           type: string
           maxLength: 50
           minLength: 3
+        cart_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        product_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
       required:
       - code
     CouponValidateRequest:
@@ -4024,8 +4154,25 @@ components:
           type: string
           minLength: 3
           maxLength: 50
+        cart_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        product_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
       required:
       - code
+    DiscountTypeEnum:
+      enum:
+      - percentage
+      - fixed
+      type: string
+      description: |-
+        * `percentage` - Percentage
+        * `fixed` - Fixed Amount
     GoogleLogin:
       type: object
       properties:
@@ -4269,6 +4416,9 @@ components:
         phone_number:
           type: string
           nullable: true
+    NullEnum:
+      enum:
+      - null
     OTP:
       type: object
       properties:
@@ -4312,6 +4462,30 @@ components:
         button_text:
           type: string
           maxLength: 100
+        discount_type:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/DiscountTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        discount_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        valid_from:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+        min_cart_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -4349,6 +4523,43 @@ components:
           maxLength: 100
         is_active:
           type: boolean
+        discount_type:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/DiscountTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        discount_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        valid_from:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+        min_cart_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_brand:
+          type: string
+          format: uuid
+          nullable: true
+        target_category:
+          type: string
+          format: uuid
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -4389,6 +4600,43 @@ components:
           maxLength: 100
         is_active:
           type: boolean
+        discount_type:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/DiscountTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        discount_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        valid_from:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+        min_cart_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_brand:
+          type: string
+          format: uuid
+          nullable: true
+        target_category:
+          type: string
+          format: uuid
+          nullable: true
       required:
       - category
       - link
@@ -5167,6 +5415,8 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        coupon_type:
+          $ref: '#/components/schemas/CouponTypeEnum'
         is_active:
           type: boolean
         valid_from:
@@ -5182,6 +5432,24 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
+          nullable: true
+        min_cart_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_brand:
+          type: string
+          format: uuid
+          nullable: true
+        target_category:
+          type: string
+          format: uuid
           nullable: true
     PatchedHeroSectionAdminRequest:
       type: object
@@ -5250,6 +5518,43 @@ components:
           maxLength: 100
         is_active:
           type: boolean
+        discount_type:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/DiscountTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        discount_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        valid_from:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+        min_cart_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_brand:
+          type: string
+          format: uuid
+          nullable: true
+        target_category:
+          type: string
+          format: uuid
+          nullable: true
     PatchedOrderDetailRequest:
       type: object
       properties:

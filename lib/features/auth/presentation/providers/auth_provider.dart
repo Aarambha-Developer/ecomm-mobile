@@ -48,7 +48,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading);
     final loggedIn = await _repository.tryAutoLogin();
     if (loggedIn) {
-      final user = await _repository.getProfile();
+      var user = await _repository.getProfile();
+      final localName = await _repository.getLocalName(user.id);
+      if (localName != null && localName.isNotEmpty) {
+        user = user.copyWith(fullName: localName);
+      }
       state = state.copyWith(
         status: AuthStatus.authenticated,
         user: user,
@@ -61,7 +65,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
     try {
-      final user = await _repository.login(email, password);
+      var user = await _repository.login(email, password);
+      final localName = await _repository.getLocalName(user.id);
+      if (localName != null && localName.isNotEmpty) {
+        user = user.copyWith(fullName: localName);
+      }
       state = state.copyWith(
         status: AuthStatus.authenticated,
         user: user,
@@ -101,6 +109,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void updateUser(AuthUser user) {
+    if (user.fullName != null && user.fullName!.isNotEmpty) {
+      _repository.saveLocalName(user.id, user.fullName!);
+    }
     state = state.copyWith(user: user);
   }
 

@@ -36,13 +36,13 @@ class ProductRepository {
     );
 
     final data = response['data'];
-    final pagination = response['pagination'] as Map<String, dynamic>?;
+    final pagination = response['pagination'] != null ? Map<String, dynamic>.from(response['pagination'] as Map) : null;
 
     List<Product> products = [];
     if (data is List) {
       products = data
-          .whereType<Map<String, dynamic>>()
-          .map((e) => Product.fromJson(e))
+          .map((e) => e is Map ? Product.fromJson(Map<String, dynamic>.from(e)) : null)
+          .whereType<Product>()
           .toList();
     }
 
@@ -56,7 +56,7 @@ class ProductRepository {
 
   Future<Product> getProduct(String slug) async {
     final response = await _remoteSource.getProduct(slug);
-    final data = response['data'] as Map<String, dynamic>;
+    final data = Map<String, dynamic>.from(response['data'] as Map);
     return Product.fromJson(data);
   }
 }

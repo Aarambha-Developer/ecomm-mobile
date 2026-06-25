@@ -109,8 +109,8 @@ class Product {
     List<ProductImage> parsedImages = [];
     if (json['images'] is List) {
       parsedImages = (json['images'] as List)
-          .whereType<Map<String, dynamic>>()
-          .map((e) => ProductImage.fromJson(e))
+          .map((e) => e is Map ? ProductImage.fromJson(Map<String, dynamic>.from(e)) : null)
+          .whereType<ProductImage>()
           .toList();
     }
 
@@ -138,8 +138,8 @@ class Product {
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
       reviews: (json['reviews'] as List<dynamic>?)
-              ?.whereType<Map<String, dynamic>>()
-              .map((e) => ProductReview.fromJson(e))
+              ?.map((e) => e is Map ? ProductReview.fromJson(Map<String, dynamic>.from(e)) : null)
+              .whereType<ProductReview>()
               .toList() ??
           [],
     );

@@ -52,10 +52,18 @@ class CheckoutRemoteSource {
     );
   }
 
-  Future<Map<String, dynamic>> validateCoupon(String code) async {
+  Future<Map<String, dynamic>> validateCoupon({
+    required String code,
+    required String cartTotal,
+    required List<String> productIds,
+  }) async {
     return await _client.post(
       ApiConstants.validateCoupon,
-      data: {'code': code},
+      data: {
+        'code': code,
+        'cart_total': cartTotal,
+        'product_ids': productIds,
+      },
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/network/api_exceptions.dart';
@@ -59,7 +60,11 @@ class _ProfileUpdateScreenState extends ConsumerState<ProfileUpdateScreen> {
 
     try {
       final repo = ref.read(authRepositoryProvider);
-      final profile = await repo.getProfile();
+      var profile = await repo.getProfile();
+      final localName = await repo.getLocalName(profile.id);
+      if (localName != null && localName.isNotEmpty) {
+        profile = profile.copyWith(fullName: localName);
+      }
       if (!mounted) return;
       ref.read(authProvider.notifier).updateUser(profile);
       _populateFields(profile);
@@ -91,14 +96,20 @@ class _ProfileUpdateScreenState extends ConsumerState<ProfileUpdateScreen> {
     try {
       final repo = ref.read(authRepositoryProvider);
       final phoneText = _phoneCtrl.text.trim();
+      final nameText = _nameCtrl.text.trim();
+
       final updated = await repo.updateProfile(
-        fullName: _nameCtrl.text.trim(),
+        fullName: nameText,
         email: _emailCtrl.text.trim(),
         phoneNumber: phoneText.isNotEmpty ? phoneText : null,
         clearPhoneNumber: phoneText.isEmpty,
       );
 
-      ref.read(authProvider.notifier).updateUser(updated);
+      // Persist the name locally and copy it to the updated object
+      await repo.saveLocalName(updated.id, nameText);
+      final userWithName = updated.copyWith(fullName: nameText);
+
+      ref.read(authProvider.notifier).updateUser(userWithName);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -242,6 +253,16 @@ class _ProfileUpdateScreenState extends ConsumerState<ProfileUpdateScreen> {
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : _save,
                       child: const Text('Save Changes'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        context.push('/profile/change-password');
+                      },
+                      child: const Text('Change Password'),
                     ),
                   ),
                   const SizedBox(height: 40),

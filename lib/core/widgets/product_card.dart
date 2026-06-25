@@ -44,7 +44,7 @@ class _ProductCardState extends State<ProductCard> {
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border, width: 0.8),
             boxShadow: const [
               BoxShadow(
@@ -58,8 +58,7 @@ class _ProductCardState extends State<ProductCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 118,
+              Expanded(
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -78,16 +77,16 @@ class _ProductCardState extends State<ProductCard> {
                     ),
                     if (product.discountPercentage > 0)
                       Positioned(
-                        top: 10,
-                        left: 10,
+                        top: 8,
+                        left: 8,
                         child: DiscountBadge(
                           discountPercentage: product.discountPercentage,
                         ),
                       ),
                     if (widget.onToggleWishlist != null)
                       Positioned(
-                        top: 10,
-                        right: 10,
+                        top: 8,
+                        right: 8,
                         child: Material(
                           color: AppColors.surface,
                           elevation: 0,
@@ -96,7 +95,7 @@ class _ProductCardState extends State<ProductCard> {
                             customBorder: const CircleBorder(),
                             onTap: widget.onToggleWishlist,
                             child: Padding(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(6),
                               child: Icon(
                                 widget.isWishlisted
                                     ? Icons.favorite
@@ -104,7 +103,7 @@ class _ProductCardState extends State<ProductCard> {
                                   color: widget.isWishlisted
                                       ? AppColors.accent
                                       : AppColors.textHint,
-                                  size: 19,
+                                  size: 17,
                                 ),
                               ),
                             ),
@@ -120,7 +119,7 @@ class _ProductCardState extends State<ProductCard> {
                               style: TextStyle(
                                 color: AppColors.white,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 13,
+                                fontSize: 12,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -130,88 +129,88 @@ class _ProductCardState extends State<ProductCard> {
                   ],
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (product.brandName != null) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            product.brandName!,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.primaryDark,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (product.brandName != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
                         ),
-                        const SizedBox(height: 4),
-                      ],
-                      Text(
-                        product.name,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          height: 1.2,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(999),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      PriceDisplay(
-                        price: product.price,
-                        discountedPrice: product.discountedPrice,
-                        discountPercentage: product.discountPercentage,
-                        priceStyle: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.price,
-                        ),
-                        discountedPriceStyle: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.priceDiscounted,
+                        child: Text(
+                          product.brandName!,
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: AppColors.primaryDark,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Spacer(),
-                      if (widget.onAddToCart != null && product.stockQuantity > 0)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 32,
-                          child: ElevatedButton(
-                            onPressed: widget.onAddToCart,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: AppColors.white,
-                              padding: EdgeInsets.zero,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              textStyle: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            child: const Text('Add To Cart'),
-                          ),
-                        ),
+                      const SizedBox(height: 3),
                     ],
-                  ),
+                    Text(
+                      product.name,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    PriceDisplay(
+                      price: product.price,
+                      discountedPrice: product.discountedPrice,
+                      discountPercentage: product.discountPercentage,
+                      priceStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.price,
+                      ),
+                      discountedPriceStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.priceDiscounted,
+                      ),
+                    ),
+                    if (widget.onAddToCart != null && product.stockQuantity > 0) ...[
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 30,
+                        child: ElevatedButton(
+                          onPressed: widget.onAddToCart,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.white,
+                            padding: EdgeInsets.zero,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          child: const Text('Add To Cart'),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],

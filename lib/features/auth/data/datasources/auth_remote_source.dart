@@ -103,14 +103,16 @@ class AuthRemoteSource {
   }
 
   Future<void> changePassword({
-    required String currentPassword,
+    required String oldPassword,
     required String newPassword,
+    required String confirmNewPassword,
   }) async {
     await _client.post(
       ApiConstants.changePassword,
       data: {
-        'current_password': currentPassword,
+        'old_password': oldPassword,
         'new_password': newPassword,
+        'confirm_new_password': confirmNewPassword,
       },
     );
   }

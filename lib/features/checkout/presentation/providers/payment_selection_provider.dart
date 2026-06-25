@@ -133,7 +133,11 @@ class PaymentSelectionNotifier extends StateNotifier<PaymentSelectionState> {
     state = state.copyWith(clearCouponRate: true);
   }
 
-  Future<double?> validateCoupon(String code) async {
+  Future<double?> validateCoupon({
+    required String code,
+    required String cartTotal,
+    required List<String> productIds,
+  }) async {
     if (code.isEmpty) return null;
 
     state = state.copyWith(
@@ -143,7 +147,11 @@ class PaymentSelectionNotifier extends StateNotifier<PaymentSelectionState> {
     );
 
     try {
-      final rate = await _service.validateCoupon(code);
+      final rate = await _service.validateCoupon(
+        code: code,
+        cartTotal: cartTotal,
+        productIds: productIds,
+      );
       state = state.copyWith(
         isValidatingCoupon: false,
         couponDiscountRate: rate,

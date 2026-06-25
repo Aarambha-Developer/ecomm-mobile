@@ -16,6 +16,7 @@ import 'package:aarambha_app/core/widgets/product_card.dart';
 import 'package:aarambha_app/core/widgets/price_display.dart';
 import 'package:aarambha_app/core/widgets/star_rating.dart';
 import 'package:aarambha_app/core/widgets/discount_badge.dart';
+import 'package:aarambha_app/core/widgets/formatted_text.dart';
 import 'package:aarambha_app/features/products/data/models/product.dart';
 import 'package:aarambha_app/features/products/presentation/providers/product_provider.dart';
 import 'package:aarambha_app/features/products/presentation/providers/review_provider.dart';
@@ -233,8 +234,10 @@ class _ImageGallery extends StatelessWidget {
     for (final img in images) {
       final url = img is String
           ? img
-          : (img is Map ? img['image']?.toString() : null);
-      if (url != null && url != primaryImage) {
+          : (img is ProductImage
+              ? img.image
+              : (img is Map ? img['image']?.toString() : null));
+      if (url != null && url.isNotEmpty && !allImages.contains(url)) {
         allImages.add(url);
       }
     }
@@ -375,8 +378,8 @@ class _ProductInfo extends StatelessWidget {
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
-          Text(
-            product.description!,
+          FormattedText(
+            text: product.description!,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -465,15 +468,15 @@ class _TabbedContentState extends ConsumerState<_TabbedContent>
                         product.description!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          product.description!,
+                        child: FormattedText(
+                          text: product.description!,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                     if (product.fullDescription != null &&
                         product.fullDescription!.isNotEmpty)
-                      Text(
-                        product.fullDescription!,
+                      FormattedText(
+                        text: product.fullDescription!,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                   ],

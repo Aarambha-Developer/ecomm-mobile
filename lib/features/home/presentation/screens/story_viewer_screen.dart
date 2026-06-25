@@ -324,6 +324,10 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen> with Tick
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (story.discountType != null && story.discountValue != null) ...[
+                          _buildDiscountBadge(story)!,
+                          const SizedBox(height: 10),
+                        ],
                         Text(
                           story.title,
                           style: const TextStyle(
@@ -436,6 +440,48 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen> with Tick
               fontWeight: FontWeight.w800,
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget? _buildDiscountBadge(Offer offer) {
+    if (offer.discountType == null || offer.discountValue == null) return null;
+    final String text;
+    if (offer.discountType == 'percentage') {
+      final valStr = offer.discountValue! % 1 == 0 ? offer.discountValue!.toInt().toString() : offer.discountValue!.toString();
+      text = '$valStr% OFF';
+    } else if (offer.discountType == 'fixed') {
+      final valStr = offer.discountValue! % 1 == 0 ? offer.discountValue!.toInt().toString() : offer.discountValue!.toString();
+      text = 'Flat \$$valStr OFF';
+    } else {
+      return null;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFE5A93B), Color(0xFFC49030)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
+          letterSpacing: 0.5,
         ),
       ),
     );

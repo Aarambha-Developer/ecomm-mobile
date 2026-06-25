@@ -72,6 +72,9 @@ class Offer {
   final String? buttonText;
   final String? category;
   final bool isActive;
+  final String? discountType;
+  final double? discountValue;
+  final double? minCartValue;
 
   const Offer({
     required this.id,
@@ -82,9 +85,18 @@ class Offer {
     this.buttonText,
     this.category,
     this.isActive = true,
+    this.discountType,
+    this.discountValue,
+    this.minCartValue,
   });
 
   factory Offer.fromJson(Map<String, dynamic> json) {
+    double? parseDouble(dynamic val) {
+      if (val == null) return null;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString());
+    }
+
     return Offer(
       id: json['id']?.toString() ?? '',
       title: json['title'] as String? ?? '',
@@ -94,6 +106,9 @@ class Offer {
       buttonText: json['button_text'] as String? ?? json['discount_text'] as String?,
       category: json['category'] as String?,
       isActive: json['is_active'] as bool? ?? true,
+      discountType: json['discount_type'] as String?,
+      discountValue: parseDouble(json['discount_value']),
+      minCartValue: parseDouble(json['min_cart_value']),
     );
   }
 }

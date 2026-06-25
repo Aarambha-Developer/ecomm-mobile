@@ -37,10 +37,18 @@ class PaymentApiService {
         .toList();
   }
 
-  Future<double> validateCoupon(String code) async {
+  Future<double> validateCoupon({
+    required String code,
+    required String cartTotal,
+    required List<String> productIds,
+  }) async {
     final response = await _client.post(
       ApiConstants.validateCoupon,
-      data: {'code': code},
+      data: {
+        'code': code,
+        'cart_total': cartTotal,
+        'product_ids': productIds,
+      },
     );
 
     Map<String, dynamic> parsed = response;

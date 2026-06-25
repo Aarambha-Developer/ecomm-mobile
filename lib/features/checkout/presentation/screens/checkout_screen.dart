@@ -58,8 +58,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     setState(() => _isValidatingCoupon = true);
     try {
+      final cart = ref.read(cartProvider).valueOrNull;
+      final cartTotal = (cart?.totalAmount ?? 0.0).toStringAsFixed(2);
+      final productIds = cart?.items.map((i) => i.productId).where((id) => id.isNotEmpty).toList() ?? [];
+
       final repo = ref.read(checkoutRepositoryProvider);
-      final discount = await repo.validateCoupon(code);
+      final discount = await repo.validateCoupon(
+        code: code,
+        cartTotal: cartTotal,
+        productIds: productIds,
+      );
       setState(() => _couponDiscount = discount);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

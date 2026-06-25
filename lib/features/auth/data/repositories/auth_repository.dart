@@ -150,12 +150,17 @@ class AuthRepository {
   }
 
   Future<void> changePassword({
-    required String currentPassword,
+    required String oldPassword,
     required String newPassword,
+    required String confirmNewPassword,
   }) async {
     await _remoteSource.changePassword(
-      currentPassword: currentPassword,
+      oldPassword: oldPassword,
       newPassword: newPassword,
+      confirmNewPassword: confirmNewPassword,
     );
   }
+
+  Future<void> saveLocalName(String emailOrId, String name) => _storage.saveFullName(emailOrId, name);
+  Future<String?> getLocalName(String emailOrId) => _storage.getFullName(emailOrId);
 }

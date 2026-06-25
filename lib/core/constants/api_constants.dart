@@ -63,7 +63,7 @@ class ApiConstants {
 
   // Profile
   // NOTE: The /auth/password/change/ endpoint does not exist in the current API spec.
-  static const String changePassword = '/auth/password/change/';
+  static const String changePassword = '/auth/me/change-password/';
 
   // Addresses
   // NOTE: The /addresses/ endpoint does not exist in the current API spec.
