@@ -12,14 +12,22 @@ platform :ios do
       in_house: false
     )
 
-    # 2. Build the iOS Archive (IPA)
-    disable_automatic_code_signing(path: "Runner.xcodeproj")
+    # 2. Update Code Signing Settings for the main target
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Runner.xcodeproj",
+      team_id: "W98N32D5AW",
+      bundle_identifier: "com.aarambhait.lumoranine",
+      code_sign_identity: "Apple Distribution",
+      profile_name: ENV["PROVISIONING_PROFILE_NAME"],
+      profile_uuid: ENV["PROVISIONING_PROFILE_UUID"]
+    )
 
+    # 3. Build the iOS Archive (IPA)
     build_app(
       workspace: "Runner.xcworkspace", 
       scheme: "Runner",
       export_method: "app-store",
-      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' DEVELOPMENT_TEAM='W98N32D5AW' PROVISIONING_PROFILE_SPECIFIER='#{ENV['PROVISIONING_PROFILE_NAME']}'",
       export_options: {
         signingStyle: "manual",
         provisioningProfiles: {
