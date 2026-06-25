@@ -6,14 +6,14 @@ import 'package:aarambha_app/core/network/api_exceptions.dart';
 import 'package:aarambha_app/features/auth/data/models/auth_user.dart';
 import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 
-class ProfileEditScreen extends ConsumerStatefulWidget {
-  const ProfileEditScreen({super.key});
+class ProfileUpdateScreen extends ConsumerStatefulWidget {
+  const ProfileUpdateScreen({super.key});
 
   @override
-  ConsumerState<ProfileEditScreen> createState() => _ProfileEditScreenState();
+  ConsumerState<ProfileUpdateScreen> createState() => _ProfileUpdateScreenState();
 }
 
-class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
+class _ProfileUpdateScreenState extends ConsumerState<ProfileUpdateScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameCtrl;
   late TextEditingController _emailCtrl;
@@ -104,7 +104,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
         );
-        Navigator.of(context).pop();
       }
     } on ProfileUpdateException catch (e) {
       if (!mounted) return;
@@ -138,9 +137,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final user = ref.watch(authProvider).user;
 
     if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Edit Profile')),
-        body: const Center(
+      return const Scaffold(
+        body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -158,7 +156,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
     if (_loadError != null && user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Edit Profile')),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -178,13 +175,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text('Edit Profile'),
-      ),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -194,7 +184,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   Center(
                     child: CircleAvatar(
                       radius: 48,

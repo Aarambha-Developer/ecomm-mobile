@@ -6,10 +6,14 @@ class AuthRemoteSource {
 
   AuthRemoteSource(this._client);
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String username, String password) async {
+    final isEmail = username.contains('@');
     return await _client.post(
       ApiConstants.login,
-      data: {'email': email, 'password': password},
+      data: {
+        isEmail ? 'email' : 'phone_number': username,
+        'password': password,
+      },
     );
   }
 
@@ -95,7 +99,7 @@ class AuthRemoteSource {
   }
 
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
-    return await _client.patch(ApiConstants.me, data: data);
+    return await _client.put(ApiConstants.me, data: data);
   }
 
   Future<void> changePassword({

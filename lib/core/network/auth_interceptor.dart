@@ -15,6 +15,10 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    if (options.path.contains(ApiConstants.refreshToken)) {
+      handler.next(options);
+      return;
+    }
     final accessToken = await _storage.getAccessToken();
     if (accessToken != null) {
       options.headers['Authorization'] = 'Bearer $accessToken';
@@ -23,10 +27,36 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    final setCookies = response.headers['set-cookie'];
+    if (setCookies != null) {
+      for (final cookie in setCookies) {
+        if (cookie.contains('access_token=')) {
+          final token = cookie.split('access_token=')[1].split(';')[0];
+          await _storage.saveAccessToken(token);
+        }
+        if (cookie.contains('refresh_token=')) {
+          final token = cookie.split('refresh_token=')[1].split(';')[0];
+          await _storage.saveRefreshToken(token);
+        }
+      }
+    }
+    handler.next(response);
+  }
+
+  @override
   void onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+    if (err.requestOptions.path.contains(ApiConstants.refreshToken)) {
+      await _storage.clearTokens();
+      handler.reject(err);
+      return;
+    }
     if (err.response?.statusCode == 401) {
       final newToken = await _tryRefresh();
       if (newToken != null) {
@@ -56,6 +86,8 @@ class AuthInterceptor extends Interceptor {
       final refreshToken = await _storage.getRefreshToken();
       if (refreshToken == null) {
         await _storage.clearTokens();
+        completer.complete();
+        _refreshCompleter = null;
         return null;
       }
 

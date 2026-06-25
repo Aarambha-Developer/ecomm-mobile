@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:aarambha_app/features/orders/presentation/providers/orders_provider.dart';
 import 'package:aarambha_app/features/orders/data/models/order.dart';
+import 'package:go_router/go_router.dart';
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/utils/formatters.dart';
 
@@ -15,8 +16,21 @@ class OrderDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final orderAsync = ref.watch(orderDetailProvider(id));
 
+    final canPop = Navigator.canPop(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Order Detail')),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(canPop ? Icons.arrow_back_rounded : Icons.home_rounded),
+          onPressed: () {
+            if (canPop) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
+        title: const Text('Order Detail'),
+      ),
       body: orderAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
@@ -32,24 +46,126 @@ class OrderDetailScreen extends ConsumerWidget {
               children: [
                 _OrderHeader(order: order),
                 const SizedBox(height: 20),
-                if (order.shippingAddress != null) ...[
+                if (order.shippingAddress != null && order.shippingAddress!.trim().isNotEmpty) ...[
                   _Section(title: 'Shipping Address', child: Text(order.shippingAddress!)),
                   const SizedBox(height: 12),
                 ],
-                if (order.paymentMethod != null) ...[
-                  _Section(
-                    title: 'Payment',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Method: ${order.paymentMethod}'),
-                        if (order.paymentStatus != null)
-                          Text('Status: ${order.paymentStatus}'),
-                      ],
-                    ),
+                
+                // Payment section
+                Builder(
+                  builder: (context) {
+                    final proof = order.paymentProof;
+                    final paymentMethod = order.paymentMethod ?? (proof != null ? 'QR / Bank Transfer' : 'Cash on Delivery (COD)');
+                    return _Section(
+                      title: 'Payment Information',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Method: $paymentMethod'),
+                          if (order.paymentStatus != null) ...[
+                            const SizedBox(height: 4),
+                            Text('Status: ${order.paymentStatus!.toUpperCase()}'),
+                          ],
+                        ],
+                      ),
+                    );
+                  }
+                ),
+                const SizedBox(height: 12),
+
+                // Payment Proof Verification section (if QR payment was chosen)
+                if (order.paymentProof != null) ...[
+                  Builder(
+                    builder: (context) {
+                      final proof = order.paymentProof!;
+                      final proofScreenshot = proof['screenshot']?.toString();
+                      final proofStatus = proof['status']?.toString();
+                      final proofAdminNote = proof['admin_note']?.toString();
+                      
+                      return _Section(
+                        title: 'Payment Verification',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Verification Status:',
+                                  style: TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: (proofStatus == 'verified'
+                                            ? AppColors.success
+                                            : proofStatus == 'rejected'
+                                                ? AppColors.error
+                                                : AppColors.warning)
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    proofStatus?.toUpperCase() ?? 'PENDING',
+                                    style: TextStyle(
+                                      color: proofStatus == 'verified'
+                                          ? AppColors.success
+                                          : proofStatus == 'rejected'
+                                              ? AppColors.error
+                                              : AppColors.warning,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (proofAdminNote != null && proofAdminNote.trim().isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Admin Note: $proofAdminNote',
+                                style: const TextStyle(
+                                  color: AppColors.error,
+                                  fontSize: 13,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                            if (proofScreenshot != null && proofScreenshot.trim().isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Submitted Screenshot:',
+                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                              ),
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                  imageUrl: proofScreenshot,
+                                  height: 150,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    height: 150,
+                                    color: AppColors.primaryLight,
+                                    child: const Center(child: CircularProgressIndicator()),
+                                  ),
+                                  errorWidget: (context, url, error) => Container(
+                                    height: 150,
+                                    color: AppColors.primaryLight,
+                                    child: const Icon(Icons.broken_image, size: 40, color: AppColors.textHint),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }
                   ),
                   const SizedBox(height: 12),
                 ],
+
                 _Section(
                   title: 'Items (${order.items.length})',
                   child: Column(
@@ -60,7 +176,7 @@ class OrderDetailScreen extends ConsumerWidget {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(6),
-                              child: item.productImage != null
+                              child: item.productImage != null && item.productImage!.isNotEmpty
                                   ? CachedNetworkImage(
                                       imageUrl: item.productImage!,
                                       width: 48,
@@ -119,7 +235,7 @@ class OrderDetailScreen extends ConsumerWidget {
                   title: 'Summary',
                   child: Column(
                     children: [
-                      _SummaryRow(label: 'Subtotal', value: Formatters.formatCurrencyPlain(order.totalAmount)),
+                      _SummaryRow(label: 'Subtotal', value: Formatters.formatCurrencyPlain(order.subtotalPrice > 0 ? order.subtotalPrice : order.totalAmount)),
                       if (order.discountAmount != null && order.discountAmount! > 0)
                         _SummaryRow(
                           label: order.coupon != null
@@ -131,7 +247,7 @@ class OrderDetailScreen extends ConsumerWidget {
                       const Divider(),
                       _SummaryRow(
                         label: 'Total',
-                        value: Formatters.formatCurrencyPlain(order.totalAmount),
+                        value: Formatters.formatCurrencyPlain(order.totalPrice > 0 ? order.totalPrice : order.totalAmount),
                         isBold: true,
                       ),
                     ],

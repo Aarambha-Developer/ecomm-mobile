@@ -11,14 +11,12 @@ class OrdersRepository {
     final data = response['data'];
     if (data is List) {
       return data
-          .whereType<Map<String, dynamic>>()
-          .map((e) => Order.fromJson(e))
+          .map((e) => Order.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     }
     if (data is Map && data['results'] is List) {
       return (data['results'] as List)
-          .whereType<Map<String, dynamic>>()
-          .map((e) => Order.fromJson(e))
+          .map((e) => Order.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     }
     return [];
@@ -29,8 +27,7 @@ class OrdersRepository {
     final data = response['data'];
     if (data is List) {
       return data
-          .whereType<Map<String, dynamic>>()
-          .map((e) => Order.fromJson(e))
+          .map((e) => Order.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     }
     return [];
@@ -38,6 +35,10 @@ class OrdersRepository {
 
   Future<Order> getOrder(String id) async {
     final response = await _remoteSource.getOrder(id);
-    return Order.fromJson(response['data'] as Map<String, dynamic>);
+    final data = response['data'];
+    if (data is Map) {
+      return Order.fromJson(Map<String, dynamic>.from(data));
+    }
+    throw Exception('Invalid order response format');
   }
 }

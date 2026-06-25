@@ -42,8 +42,8 @@ android {
             // TODO: Configure the release signing config once the keystore is created.
             // signingConfig = signingConfigs.getByName("release")
             signingConfig = signingConfigs.getByName("debug")
-            minifyEnabled = true
-            shrinkResources = true
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -110,7 +110,7 @@ class _OrderCard extends StatelessWidget {
                       final item = order.items[i];
                       return ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: item.productImage != null
+                        child: item.productImage != null && item.productImage!.isNotEmpty
                             ? CachedNetworkImage(
                                 imageUrl: item.productImage!,
                                 width: 48,
@@ -123,6 +123,7 @@ class _OrderCard extends StatelessWidget {
                               )
                             : Container(
                                 width: 48,
+                                height: 48,
                                 color: AppColors.primaryLight,
                                 child: const Icon(Icons.image, size: 20),
                               ),

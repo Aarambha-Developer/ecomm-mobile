@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/storage/secure_storage.dart';
@@ -28,7 +27,7 @@ class ApiClient {
       LogInterceptor(
         requestBody: true,
         responseBody: true,
-        logPrint: (o) => developer.log(o.toString(), name: 'ApiClient'),
+        logPrint: (o) => print('[ApiClient] $o'),
       ),
     ]);
   }

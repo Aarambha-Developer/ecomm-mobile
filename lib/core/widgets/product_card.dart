@@ -41,16 +41,16 @@ class _ProductCardState extends State<ProductCard> {
         scale: _isPressed ? 0.97 : 1.0,
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
-child: Container(
-          height: 290,
+        child: Container(
           decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(16),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border, width: 0.8),
             boxShadow: const [
               BoxShadow(
                 color: AppColors.cardShadow,
-                blurRadius: 12,
-                offset: Offset(0, 4),
+                blurRadius: 18,
+                offset: Offset(0, 8),
               ),
             ],
           ),
@@ -59,25 +59,37 @@ child: Container(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                height: 160,
+                height: 126,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
                     _buildImage(product),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.12),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
                     if (product.discountPercentage > 0)
                       Positioned(
-                        top: 8,
-                        left: 8,
+                        top: 10,
+                        left: 10,
                         child: DiscountBadge(
                           discountPercentage: product.discountPercentage,
                         ),
                       ),
                     if (widget.onToggleWishlist != null)
                       Positioned(
-                        top: 8,
-                        right: 8,
+                        top: 10,
+                        right: 10,
                         child: Material(
-                          color: AppColors.white,
+                          color: AppColors.surface,
                           elevation: 0,
                           shape: const CircleBorder(),
                           child: InkWell(
@@ -89,14 +101,14 @@ child: Container(
                                 widget.isWishlisted
                                     ? Icons.favorite
                                     : Icons.favorite_border,
-                                color: widget.isWishlisted
-                                    ? AppColors.accent
-                                    : AppColors.textHint,
-                                size: 18,
+                                  color: widget.isWishlisted
+                                      ? AppColors.accent
+                                      : AppColors.textHint,
+                                  size: 19,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ),
                     if (product.stockQuantity == 0)
                       Positioned.fill(
@@ -120,46 +132,56 @@ child: Container(
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (product.brandName != null)
-                        Text(
-                          product.brandName!,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLight,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            product.brandName!,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 6),
                       Text(
                         product.name,
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
-                          height: 1.3,
+                          height: 1.2,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       PriceDisplay(
                         price: product.price,
                         discountedPrice: product.discountedPrice,
                         discountPercentage: product.discountPercentage,
                         priceStyle: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: AppColors.price,
                         ),
                         discountedPriceStyle: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: AppColors.priceDiscounted,
                         ),
@@ -168,7 +190,7 @@ child: Container(
                       if (widget.onAddToCart != null && product.stockQuantity > 0)
                         SizedBox(
                           width: double.infinity,
-                          height: 32,
+                          height: 36,
                           child: ElevatedButton(
                             onPressed: widget.onAddToCart,
                             style: ElevatedButton.styleFrom(
@@ -177,14 +199,14 @@ child: Container(
                               padding: EdgeInsets.zero,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               textStyle: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            child: const Text('Add to Cart'),
+                            child: const Text('Add To Cart'),
                           ),
                         ),
                     ],
@@ -202,7 +224,13 @@ child: Container(
     final imageUrl = product.primaryImage ?? product.images.firstOrNull?.image;
     if (imageUrl == null) {
       return Container(
-        color: AppColors.primaryLight,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primaryLight, AppColors.glowPeach],
+          ),
+        ),
         child: const Center(
           child: Icon(Icons.image_outlined, color: AppColors.textHint, size: 32),
         ),
@@ -212,9 +240,9 @@ child: Container(
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,
-      placeholder: (_, _) => Container(color: AppColors.primaryLight),
+      placeholder: (_, _) => Container(color: AppColors.surfaceVariant),
       errorWidget: (_, _, _) => Container(
-        color: AppColors.primaryLight,
+        color: AppColors.surfaceVariant,
         child:
             const Icon(Icons.broken_image_outlined, color: AppColors.textHint, size: 32),
       ),

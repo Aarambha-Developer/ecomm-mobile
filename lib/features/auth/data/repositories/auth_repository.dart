@@ -1,4 +1,5 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../datasources/auth_remote_source.dart';
 import '../models/auth_user.dart';
@@ -109,23 +110,43 @@ class AuthRepository {
     String? fullName,
     String? email,
     String? phoneNumber,
+    bool clearPhoneNumber = false,
   }) async {
     final data = <String, dynamic>{};
-    if (fullName != null) data['full_name'] = fullName;
-    if (email != null) data['email'] = email;
-    if (phoneNumber != null) data['phone_number'] = phoneNumber;
-    final response = await _remoteSource.updateProfile(data);
-    final responseData = response['data'];
-    if (responseData is Map<String, dynamic>) {
-      return AuthUser.fromJson(responseData);
+    final cleanName = fullName?.trim();
+    final cleanEmail = email?.trim();
+    final cleanPhone = phoneNumber?.trim();
+
+    if (cleanName != null && cleanName.isNotEmpty) {
+      data['full_name'] = cleanName;
     }
-    return AuthUser(
-      id: '',
-      email: email ?? '',
-      phoneNumber: phoneNumber,
-      fullName: fullName,
-      role: 'user',
-    );
+    if (cleanEmail != null && cleanEmail.isNotEmpty) {
+      data['email'] = cleanEmail;
+    }
+    if (clearPhoneNumber) {
+      data['phone_number'] = null;
+    } else if (cleanPhone != null && cleanPhone.isNotEmpty) {
+      data['phone_number'] = cleanPhone;
+    }
+
+    if (data.isEmpty) {
+      return await getProfile();
+    }
+
+    try {
+      final response = await _remoteSource.updateProfile(data);
+      final responseData = response['data'];
+      if (responseData is Map<String, dynamic>) {
+        return AuthUser.fromJson(responseData);
+      }
+      return await getProfile();
+    } on ValidationException catch (e) {
+      throw ProfileUpdateException(
+        e.message,
+        errors: e.errors,
+        statusCode: e.statusCode,
+      );
+    }
   }
 
   Future<void> changePassword({

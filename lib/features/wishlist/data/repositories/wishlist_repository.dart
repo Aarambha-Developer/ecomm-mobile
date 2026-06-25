@@ -10,17 +10,21 @@ class WishlistRepository {
 
   Future<Wishlist> getWishlist() async {
     final response = await _remoteSource.getWishlist();
-    return Wishlist.fromJson(response['data'] as Map<String, dynamic>);
+    final data = response['data'];
+    if (data is Map) {
+      return Wishlist.fromJson(Map<String, dynamic>.from(data));
+    }
+    return const Wishlist(id: '');
   }
 
   Future<Wishlist> addItem(String productId) async {
-    final response = await _remoteSource.addItem(productId);
-    return Wishlist.fromJson(response['data'] as Map<String, dynamic>);
+    await _remoteSource.addItem(productId);
+    return getWishlist();
   }
 
   Future<Wishlist> removeItem(String itemId) async {
     await _remoteSource.removeItem(itemId);
-    return const Wishlist(id: '');
+    return getWishlist();
   }
 
   Future<void> clearWishlist() async {

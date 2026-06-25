@@ -6,6 +6,7 @@ import 'core/router/app_router.dart';
 import 'core/storage/local_cart_provider.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/cart/presentation/providers/cart_provider.dart';
+import 'features/wishlist/presentation/providers/wishlist_provider.dart';
 
 class AarambhaApp extends ConsumerStatefulWidget {
   const AarambhaApp({super.key});
@@ -26,6 +27,8 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
   }
 
   Future<void> _syncLocalCartToServer() async {
+    await ref.read(cartProvider.notifier).loadCart();
+
     final localItems = ref.read(localCartProvider).items;
     if (localItems.isEmpty) return;
 
@@ -33,10 +36,13 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
     final cartNotifier = ref.read(cartProvider.notifier);
     for (final item in localItems) {
       try {
-        await cartNotifier.addItem(
+        final succeeded = await cartNotifier.addItem(
           productId: item.productId,
           quantity: item.quantity,
         );
+        if (!succeeded) {
+          allSucceeded = false;
+        }
       } catch (_) {
         allSucceeded = false;
       }
@@ -52,6 +58,7 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
       if (prev?.status != AuthStatus.authenticated &&
           next.status == AuthStatus.authenticated) {
         _syncLocalCartToServer();
+        ref.read(wishlistProvider.notifier).loadWishlist();
       }
     });
 

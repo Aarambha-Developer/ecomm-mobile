@@ -72,6 +72,19 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
+    String? parseString(dynamic val) {
+      if (val == null) return null;
+      if (val is String) return val;
+      if (val is Map) {
+        for (final key in ['name', 'title', 'value', 'text', 'label']) {
+          final nested = val[key];
+          if (nested is String && nested.isNotEmpty) return nested;
+        }
+      }
+      final raw = val.toString();
+      return raw.isEmpty ? null : raw;
+    }
+
     double parsePrice(dynamic val) {
       if (val == null) return 0;
       if (val is num) return val.toDouble();
@@ -103,25 +116,27 @@ class Product {
 
     return Product(
       id: json['id']?.toString() ?? '',
-      name: json['name'] as String? ?? '',
-      slug: json['slug'] as String? ?? '',
+      name: parseString(json['name']) ?? '',
+      slug: parseString(json['slug']) ?? '',
       categoryId: category?['id']?.toString(),
-      categoryName: category?['name'] as String?,
-      categorySlug: category?['slug'] as String?,
+      categoryName: parseString(category?['name']),
+      categorySlug: parseString(category?['slug']),
       brandId: brand?['id']?.toString(),
-      brandName: brand?['title'] as String?,
-      brandSlug: brand?['slug'] as String?,
-      description: json['description'] as String?,
+      brandName: parseString(brand?['title']),
+      brandSlug: parseString(brand?['slug']),
+      description: parseString(json['description']),
       price: parsePrice(json['price']),
       discountPercentage: parsePrice(json['discount_percentage']),
       discountedPrice: parsePrice(json['discounted_price']),
       stockQuantity: json['stock_quantity'] as int? ?? 0,
       isActive: json['is_active'] as bool? ?? true,
       rating: parsePrice(json['rating']),
-      primaryImage: primaryImageObj?['image'] as String?,
+      primaryImage: parseString(primaryImageObj?['image']),
       images: parsedImages,
-      fullDescription: json['full_description'] as String?,
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
+      fullDescription: parseString(json['full_description']),
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
       reviews: (json['reviews'] as List<dynamic>?)
               ?.whereType<Map<String, dynamic>>()
               .map((e) => ProductReview.fromJson(e))
@@ -152,13 +167,27 @@ class ProductReview {
   });
 
   factory ProductReview.fromJson(Map<String, dynamic> json) {
+    String? parseString(dynamic val) {
+      if (val == null) return null;
+      if (val is String) return val;
+      if (val is Map) {
+        final display = val['full_name'] ?? val['name'] ?? val['email'];
+        if (display is String && display.isNotEmpty) return display;
+      }
+      return val.toString();
+    }
+
     return ProductReview(
       id: json['id']?.toString() ?? '',
-      user: json['user'] as String?,
+      user: parseString(json['user']),
       rating: json['rating'] as int? ?? 0,
-      comment: json['comment'] as String? ?? '',
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
+      comment: parseString(json['comment']) ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
     );
   }
 }

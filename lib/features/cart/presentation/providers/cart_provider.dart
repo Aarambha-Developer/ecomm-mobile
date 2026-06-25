@@ -39,7 +39,7 @@ class CartNotifier extends StateNotifier<AsyncValue<Cart>> {
     }
   }
 
-  Future<void> addItem({
+  Future<bool> addItem({
     required String productId,
     int quantity = 1,
   }) async {
@@ -50,10 +50,12 @@ class CartNotifier extends StateNotifier<AsyncValue<Cart>> {
         quantity: quantity,
       );
       state = AsyncValue.data(cart);
+      return true;
     } catch (e, _) {
       if (previous is AsyncData) {
         state = previous;
       }
+      return false;
     }
   }
 

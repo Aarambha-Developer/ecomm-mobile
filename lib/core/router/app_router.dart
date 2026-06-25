@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -10,18 +9,20 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/profile_edit_screen.dart';
 // TODO: Re-enable when API endpoints are available
 // import '../../features/auth/presentation/screens/change_password_screen.dart';
-import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/home/presentation/screens/main_layout_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
 import '../../features/wishlist/presentation/screens/wishlist_screen.dart';
 import '../../features/account/presentation/screens/account_screen.dart';
 import '../../features/products/presentation/screens/product_list_screen.dart';
 import '../../features/products/presentation/screens/product_detail_screen.dart';
+import '../../features/products/presentation/screens/search_screen.dart';
 import '../../features/categories/presentation/screens/category_products_screen.dart';
 import '../../features/brands/presentation/screens/brand_products_screen.dart';
 import '../../features/orders/presentation/screens/orders_list_screen.dart';
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
-import '../../features/checkout/presentation/screens/checkout_screen.dart';
+import '../../features/checkout/presentation/screens/payment_selection_screen.dart';
 import '../../features/contact/presentation/screens/contact_screen.dart';
+import '../../features/contact/presentation/screens/contact_details_screen.dart';
 // TODO: Re-enable when API endpoints are available
 // import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
 // import '../../features/addresses/presentation/screens/address_form_screen.dart';
@@ -64,7 +65,8 @@ class AppRouter {
       final isProtected = _protectedRoutes.any(path.startsWith);
 
       if (isProtected && !isLoggedIn) {
-        return '/login';
+        final redirect = Uri.encodeComponent(state.uri.toString());
+        return '/login?redirect=$redirect';
       }
 
       if (_authRoutes.contains(path) && isLoggedIn) {
@@ -74,42 +76,29 @@ class AppRouter {
       return null;
     },
     routes: [
-      ShellRoute(
-        builder: (context, state, child) => _MainShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/',
-            pageBuilder: (context, state) => _noTransitionPage(
-              state,
-              const HomeScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/cart',
-            pageBuilder: (context, state) => _noTransitionPage(
-              state,
-              const CartScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/wishlist',
-            pageBuilder: (context, state) => _noTransitionPage(
-              state,
-              const WishlistScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/account',
-            pageBuilder: (context, state) => _noTransitionPage(
-              state,
-              const AccountScreen(),
-            ),
-          ),
-        ],
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const MainLayoutScreen(),
+      ),
+      GoRoute(
+        path: '/cart',
+        builder: (context, state) => const CartScreen(),
+      ),
+      GoRoute(
+        path: '/wishlist',
+        builder: (context, state) => const WishlistScreen(),
+      ),
+      GoRoute(
+        path: '/account',
+        builder: (context, state) => const AccountScreen(),
       ),
       GoRoute(
         path: '/products',
         builder: (context, state) => const ProductListScreen(),
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
       ),
       GoRoute(
         path: '/products/:slug',
@@ -141,11 +130,36 @@ class AppRouter {
       ),
       GoRoute(
         path: '/checkout',
-        builder: (context, state) => const CheckoutScreen(),
+        builder: (context, state) => const PaymentSelectionScreen(),
       ),
       GoRoute(
         path: '/contact',
         builder: (context, state) => const ContactScreen(),
+      ),
+      GoRoute(
+        path: '/contact-details',
+        builder: (context, state) => const ContactDetailsScreen(),
+      ),
+      GoRoute(
+        path: '/policies',
+        builder: (context, state) => const StaticContentViewerScreen(
+          title: 'Policies',
+          content: 'Privacy & Refund Policy\n\n1. Privacy Policy\nAt Lumora Nine, we value your privacy. We collect your personal information such as name, email, and phone number only to provide our services and process your orders. We do not sell your personal data to third parties.\n\n2. Refund Policy\nIf you are not satisfied with your purchase, you may return the unused product within 15 days of delivery for a full refund or exchange. Shipping costs are non-refundable.',
+        ),
+      ),
+      GoRoute(
+        path: '/terms',
+        builder: (context, state) => const StaticContentViewerScreen(
+          title: 'Terms & Conditions',
+          content: 'Terms and Conditions\n\nWelcome to Lumora Nine. By using our application, you agree to comply with and be bound by the following terms and conditions:\n\n1. Account Security\nYou are responsible for maintaining the confidentiality of your account credentials.\n\n2. Product Information\nWe strive to display product colors and details as accurately as possible. However, we cannot guarantee your screen\'s display will be completely accurate.\n\n3. Limitation of Liability\nLumora Nine shall not be liable for any direct, indirect, incidental, or consequential damages arising from your use of our services.',
+        ),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const StaticContentViewerScreen(
+          title: 'About Lumora Nine',
+          content: 'About Lumora Nine\n\nLumora Nine is a premium cosmetics and skincare brand dedicated to bringing you the highest quality beauty products. Founded on the principles of purity, efficacy, and inclusivity, we craft our products using ethically sourced ingredients.\n\nOur mission is to empower everyone to express their unique beauty. Thank you for choosing Lumora Nine as your beauty partner.',
+        ),
       ),
       GoRoute(
         path: '/login',
@@ -188,89 +202,7 @@ class AppRouter {
     ],
   );
 
-  CustomTransitionPage<void> _noTransitionPage(GoRouterState state, Widget child) {
-    return CustomTransitionPage(
-      key: state.pageKey,
-      child: child,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
-    );
-  }
+
 }
 
-class _MainShell extends ConsumerStatefulWidget {
-  final Widget child;
 
-  const _MainShell({required this.child});
-
-  @override
-  ConsumerState<_MainShell> createState() => _MainShellState();
-}
-
-class _MainShellState extends ConsumerState<_MainShell> {
-  @override
-  Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-
-    int currentIndex = 0;
-    if (location.startsWith('/cart')) currentIndex = 1;
-    if (location.startsWith('/wishlist')) currentIndex = 2;
-    if (location.startsWith('/account')) currentIndex = 3;
-
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cardShadow,
-              blurRadius: 16,
-              offset: Offset(0, -4),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          type: BottomNavigationBarType.fixed,
-          onTap: (index) {
-            switch (index) {
-              case 0:
-                context.go('/');
-                break;
-              case 1:
-                context.go('/cart');
-                break;
-              case 2:
-                context.go('/wishlist');
-                break;
-              case 3:
-                context.go('/account');
-                break;
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag_outlined),
-              activeIcon: Icon(Icons.shopping_bag),
-              label: 'Cart',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_outline),
-              activeIcon: Icon(Icons.favorite_rounded),
-              label: 'Wishlist',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person_rounded),
-              label: 'Account',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -5,6 +5,9 @@ class AppException implements Exception {
   final int? statusCode;
 
   AppException(this.message, {this.statusCode});
+
+  @override
+  String toString() => message;
 }
 
 class NetworkException extends AppException {
@@ -29,6 +32,30 @@ class ValidationException extends AppException {
   final Map<String, dynamic> errors;
 
   ValidationException(super.message, this.errors, {super.statusCode});
+
+  @override
+  String toString() {
+    if (errors.isEmpty) return message;
+    final buffer = StringBuffer(message);
+    buffer.write('\n');
+    errors.forEach((key, value) {
+      buffer.write('$key: $value\n');
+    });
+    return buffer.toString().trim();
+  }
+}
+
+class ProfileUpdateException extends AppException {
+  final Map<String, dynamic> errors;
+
+  ProfileUpdateException(super.message, {this.errors = const {}, super.statusCode});
+
+  String? get fieldErrorsSummary {
+    if (errors.isEmpty) return null;
+    return errors.entries
+        .map((e) => '${e.key}: ${(e.value is List ? (e.value as List).join(', ') : e.value.toString())}')
+        .join('\n');
+  }
 }
 
 class RateLimitException extends AppException {

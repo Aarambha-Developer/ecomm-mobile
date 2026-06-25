@@ -57,37 +57,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final productsState = ref.watch(productListProvider);
     final heroAsync = ref.watch(heroSlidesProvider);
     final offersAsync = ref.watch(offersProvider);
+    final storiesAsync = ref.watch(storyOffersProvider);
 
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(categoriesProvider);
-          ref.invalidate(brandsProvider);
-          ref.invalidate(heroSlidesProvider);
-          ref.invalidate(offersProvider);
-          ref.read(productListProvider.notifier).refresh();
-          await Future.wait([
-            ref.refresh(categoriesProvider.future),
-            ref.refresh(brandsProvider.future),
-            ref.refresh(heroSlidesProvider.future),
-            ref.refresh(offersProvider.future),
-          ]);
-        },
-        child: ListView(
-          controller: _scrollController,
-          children: [
-            _HeroSection(heroAsync: heroAsync),
-            const SizedBox(height: 16),
-            _CategoriesSection(categoriesAsync: categoriesAsync),
-            const SizedBox(height: 24),
-            _OffersSection(offersAsync: offersAsync),
-            const SizedBox(height: 24),
-            _ProductsGrid(productsState: productsState),
-            const SizedBox(height: 32),
-            _BrandsSection(brandsAsync: brandsAsync),
-            const SizedBox(height: 32),
-            _Footer(),
-          ],
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.background, AppColors.surface],
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(categoriesProvider);
+            ref.invalidate(brandsProvider);
+            ref.invalidate(heroSlidesProvider);
+            ref.invalidate(offersProvider);
+            ref.read(productListProvider.notifier).refresh();
+            await Future.wait([
+              ref.refresh(categoriesProvider.future),
+              ref.refresh(brandsProvider.future),
+              ref.refresh(heroSlidesProvider.future),
+              ref.refresh(offersProvider.future),
+            ]);
+          },
+          child: ListView(
+            controller: _scrollController,
+            children: [
+              _HeroSection(heroAsync: heroAsync),
+              const SizedBox(height: 16),
+              _StoriesSection(storiesAsync: storiesAsync),
+              const SizedBox(height: 20),
+              _CategoriesSection(categoriesAsync: categoriesAsync),
+              const SizedBox(height: 24),
+              _OffersSection(offersAsync: offersAsync),
+              const SizedBox(height: 24),
+              _ProductsGrid(productsState: productsState),
+              const SizedBox(height: 32),
+              _BrandsSection(brandsAsync: brandsAsync),
+              const SizedBox(height: 32),
+              _Footer(),
+            ],
+          ),
         ),
       ),
     );
@@ -404,6 +416,274 @@ children: [
   }
 }
 
+class _StoriesSection extends StatelessWidget {
+  final AsyncValue<List<Offer>> storiesAsync;
+
+  const _StoriesSection({required this.storiesAsync});
+
+  @override
+  Widget build(BuildContext context) {
+    return storiesAsync.when(
+      loading: () => _sectionShimmer(
+        title: 'Stories',
+        height: 96,
+        child: Row(
+          children: List.generate(
+            6,
+            (_) => Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Container(
+                width: 74,
+                height: 74,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.surface,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (stories) {
+        if (stories.isEmpty) return const SizedBox.shrink();
+
+        return _SectionHeader(
+          title: 'Stories',
+          child: SizedBox(
+            height: 104,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: stories.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final story = stories[index];
+                final imageUrl = story.image;
+                return GestureDetector(
+                  onTap: () {
+                    showDialog<void>(
+                      context: context,
+                      barrierColor: Colors.black87,
+                      builder: (_) => _StoryViewerDialog(
+                        stories: stories,
+                        initialIndex: index,
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [AppColors.primary, AppColors.accent],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.cardShadow,
+                              blurRadius: 8,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          backgroundColor: AppColors.surface,
+                          child: ClipOval(
+                            child: imageUrl != null
+                                ? CachedNetworkImage(
+                                    imageUrl: imageUrl,
+                                    width: 66,
+                                    height: 66,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (_, _, _) => _storyFallback(),
+                                  )
+                                : _storyFallback(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        width: 74,
+                        child: Text(
+                          story.title,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _storyFallback() {
+    return Container(
+      color: AppColors.surfaceVariant,
+      child: const Center(
+        child: Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+      ),
+    );
+  }
+}
+
+class _StoryViewerDialog extends StatefulWidget {
+  final List<Offer> stories;
+  final int initialIndex;
+
+  const _StoryViewerDialog({required this.stories, required this.initialIndex});
+
+  @override
+  State<_StoryViewerDialog> createState() => _StoryViewerDialogState();
+}
+
+class _StoryViewerDialogState extends State<_StoryViewerDialog> {
+  late final PageController _controller =
+      PageController(initialPage: widget.initialIndex);
+  late int _index = widget.initialIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog.fullscreen(
+      backgroundColor: Colors.black,
+      child: SafeArea(
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _controller,
+              itemCount: widget.stories.length,
+              onPageChanged: (value) => setState(() => _index = value),
+              itemBuilder: (context, index) {
+                final story = widget.stories[index];
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (story.image != null)
+                      CachedNetworkImage(
+                        imageUrl: story.image!,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, _, _) => _storyBackground(story),
+                      )
+                    else
+                      _storyBackground(story),
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x99000000), Colors.transparent, Color(0xC0000000)],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 20,
+                      right: 20,
+                      bottom: 48,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            story.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (story.description != null && story.description!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              story.description!,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 10,
+              child: Row(
+                children: List.generate(widget.stories.length, (i) {
+                  return Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      height: 3,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(3),
+                        color: i <= _index ? Colors.white : Colors.white30,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close_rounded, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _storyBackground(Offer story) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primaryDark, AppColors.primary],
+        ),
+      ),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Text(
+            story.title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CategoriesSection extends StatelessWidget {
   final AsyncValue<List<Category>> categoriesAsync;
 
@@ -519,18 +799,20 @@ class _OffersSection extends StatelessWidget {
       loading: _buildLoading,
       error: (_, _) => const SizedBox.shrink(),
       data: (offers) {
-        if (offers.isEmpty) return const SizedBox.shrink();
+        final visibleOffers =
+            offers.where((offer) => offer.category != 'story').toList();
+        if (visibleOffers.isEmpty) return const SizedBox.shrink();
         return _SectionHeader(
           title: 'Special Offers',
           child: SizedBox(
-            height: 140,
+            height: 150,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: offers.length,
+              itemCount: visibleOffers.length,
               separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
-                final offer = offers[index];
+                final offer = visibleOffers[index];
                 return GestureDetector(
                   onTap: () => context.push('/products'),
                   child: Container(
@@ -549,16 +831,16 @@ class _OffersSection extends StatelessWidget {
                         if (offer.image != null)
                           SizedBox(
                             width: 110,
+                            height: 150,
                             child: CachedNetworkImage(
                               imageUrl: offer.image!,
-                              height: 140,
                               fit: BoxFit.cover,
                               errorWidget: (_, _, _) => const SizedBox(),
                             ),
                           ),
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(12),
                             child: Column(
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
@@ -568,7 +850,7 @@ class _OffersSection extends StatelessWidget {
                                   offer.title,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     color: Colors.white,
                                     letterSpacing: -0.2,
                                   ),
@@ -581,30 +863,30 @@ class _OffersSection extends StatelessWidget {
                                     offer.description!,
                                     style: const TextStyle(
                                       color: Colors.white70,
-                                      fontSize: 12,
+                                      fontSize: 11,
                                     ),
-                                    maxLines: 2,
+                                    maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                                 if (offer.buttonText != null) ...[
-                                  const SizedBox(height: 10),
+                                  const SizedBox(height: 8),
                                   Container(
                                     padding:
                                         const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 5),
+                                            horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: Colors.white
                                           .withValues(alpha: 0.2),
                                       borderRadius:
-                                          BorderRadius.circular(12),
+                                          BorderRadius.circular(10),
                                     ),
                                     child: Text(
                                       offer.buttonText!,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w700,
-                                        fontSize: 12,
+                                        fontSize: 11,
                                       ),
                                     ),
                                   ),
@@ -696,7 +978,7 @@ class _ProductsGrid extends ConsumerWidget {
             itemCount: products.length + (productsState.isLoadingMore ? 2 : 0),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.62,
+              childAspectRatio: 0.58,
               crossAxisSpacing: 8,
               mainAxisSpacing: 12,
             ),

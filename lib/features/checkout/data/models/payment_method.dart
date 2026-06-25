@@ -36,4 +36,17 @@ class PaymentMethod {
   bool get isCod => type == 'cod';
   bool get isGateway =>
       type == 'gateway_esewa' || type == 'gateway_khalti';
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'type': type,
+      'qr_image': qrImage,
+      'account_name': accountName,
+      'account_number': accountNumber,
+      'instructions': instructions,
+      'is_active': isActive,
+    };
+  }
 }

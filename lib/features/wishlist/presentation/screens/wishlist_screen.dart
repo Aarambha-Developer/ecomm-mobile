@@ -27,8 +27,16 @@ class WishlistScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: wishlistAsync.when(
-          loading: () => const LoadingWidget(message: 'Loading wishlist...'),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.background, AppColors.surface],
+          ),
+        ),
+        child: wishlistAsync.when(
+        loading: () => const LoadingWidget(message: 'Loading wishlist...'),
         error: (e, _) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -55,12 +63,12 @@ class WishlistScreen extends ConsumerWidget {
           }
 
           return GridView.builder(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.65,
+              childAspectRatio: 0.68,
               crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
+              mainAxisSpacing: 10,
             ),
             itemCount: wishlist.items.length,
             itemBuilder: (context, index) {
@@ -79,6 +87,7 @@ class WishlistScreen extends ConsumerWidget {
             },
           );
         },
+      ),
       ),
     );
   }

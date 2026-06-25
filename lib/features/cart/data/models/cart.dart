@@ -33,10 +33,14 @@ class CartItem {
       product = Map<String, dynamic>.from(json['product'] as Map);
     }
 
-    Map<String, dynamic>? primaryImage;
-    if (product?['primary_image'] is Map) {
-      primaryImage =
-          Map<String, dynamic>.from(product!['primary_image'] as Map);
+    String? prodImage;
+    if (product != null) {
+      final img = product['primary_image'];
+      if (img is Map) {
+        prodImage = img['image']?.toString();
+      } else {
+        prodImage = img?.toString();
+      }
     }
 
     return CartItem(
@@ -44,7 +48,7 @@ class CartItem {
       productId: product?['id']?.toString() ?? '',
       productName: product?['name'] as String? ?? '',
       productSlug: product?['slug'] as String?,
-      productImage: primaryImage?['image'] as String?,
+      productImage: prodImage,
       unitPrice: parsePrice(json['unit_price']),
       subtotal: parsePrice(json['subtotal']),
       quantity: json['quantity'] as int? ?? 1,
@@ -70,15 +74,17 @@ class Cart {
     List<CartItem> parsedItems = [];
     if (json['items'] is List) {
       parsedItems = (json['items'] as List)
-          .whereType<Map<String, dynamic>>()
-          .map((e) => CartItem.fromJson(e))
+          .map((e) => CartItem.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     }
+
+    final totalItemsRaw = json['total_items'];
+    final totalItems = totalItemsRaw is num ? totalItemsRaw.toInt() : (int.tryParse(totalItemsRaw?.toString() ?? '') ?? 0);
 
     return Cart(
       id: json['id']?.toString() ?? '',
       items: parsedItems,
-      totalItems: json['total_items'] as int? ?? 0,
+      totalItems: totalItems,
       totalAmount: (() {
         final v = json['total_amount'];
         if (v == null) return 0.0;

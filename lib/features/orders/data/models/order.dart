@@ -38,6 +38,48 @@ class Order {
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
+    String? parseString(dynamic val) {
+      if (val == null) return null;
+      if (val is String) return val;
+      if (val is Map) {
+        for (final key in [
+          'full_address',
+          'address',
+          'title',
+          'name',
+          'value',
+          'code'
+        ]) {
+          final nested = val[key];
+          if (nested is String && nested.isNotEmpty) return nested;
+        }
+      }
+      final raw = val.toString();
+      return raw.isEmpty ? null : raw;
+    }
+
+    String? parseAddress(dynamic val) {
+      if (val == null) return null;
+      if (val is String) return val;
+      if (val is Map) {
+        final ordered = [
+          val['full_address'],
+          val['address'],
+          val['city'],
+          val['state'],
+          val['zip_code'] ?? val['zip'],
+          val['country'],
+        ];
+        final parts = ordered
+            .map((e) => e?.toString().trim())
+            .whereType<String>()
+            .where((e) => e.isNotEmpty)
+            .toList();
+        if (parts.isNotEmpty) return parts.join(', ');
+      }
+      return val.toString();
+    }
+
     final itemsRaw = json['items'];
     List<OrderItem> items = [];
     if (itemsRaw is List) {
@@ -46,22 +88,32 @@ class Order {
           .map((e) => OrderItem.fromJson(e))
           .toList();
     }
+    double parseDouble(dynamic val) {
+      if (val == null) return 0;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? 0;
+    }
+
     return Order(
       id: json['id']?.toString() ?? '',
       orderNumber: json['order_number']?.toString() ?? json['id']?.toString() ?? '',
-      status: json['status'] as String? ?? 'pending',
-      totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0,
-      shippingAddress: json['shipping_address'] as String?,
-      notes: json['notes'] as String?,
-      paymentMethod: json['payment_method_title'] as String?,
-      paymentStatus: json['payment_status'] as String?,
-      coupon: json['coupon'] as String? ?? json['coupon_code'] as String?,
-      discountAmount: (json['discount_amount'] as num?)?.toDouble(),
-      totalItems: (json['total_items'] as num?)?.toInt() ?? 0,
-      totalPrice: (json['total_price'] as num?)?.toDouble() ?? 0,
-      subtotalPrice: (json['subtotal_price'] as num?)?.toDouble() ?? 0,
-      paymentProof: json['payment_proof'] as Map<String, dynamic>?,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
+      status: parseString(json['status']) ?? 'pending',
+      totalAmount: parseDouble(json['total_amount'] ?? json['total_price']),
+      shippingAddress: parseAddress(json['shipping_address']),
+      notes: parseString(json['notes']),
+      paymentMethod: parseString(json['payment_method_title'] ?? json['payment_method']),
+      paymentStatus: parseString(json['payment_status']),
+      coupon: parseString(json['coupon'] ?? json['coupon_code']),
+      discountAmount: json['discount_amount'] != null ? parseDouble(json['discount_amount']) : null,
+      totalItems: json['total_items'] is num ? (json['total_items'] as num).toInt() : (int.tryParse(json['total_items']?.toString() ?? '') ?? 0),
+      totalPrice: parseDouble(json['total_price']),
+      subtotalPrice: parseDouble(json['subtotal_price']),
+      paymentProof: json['payment_proof'] is Map
+          ? Map<String, dynamic>.from(json['payment_proof'] as Map)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
       items: items,
       createdAt: _parseDate(json['created_at']),
     );
@@ -121,13 +173,55 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
+    double parseDouble(dynamic val) {
+      if (val == null) return 0;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? 0;
+    }
+
+    String? parseString(dynamic val) {
+      if (val == null) return null;
+      if (val is String) return val;
+      if (val is Map) {
+        final nested = val['name'] ?? val['title'] ?? val['image'];
+        if (nested is String && nested.isNotEmpty) return nested;
+      }
+      return val.toString();
+    }
+
+    String prodId = '';
+    String prodName = '';
+    String? prodImage;
+
+    final productRaw = json['product'];
+    if (productRaw is Map) {
+      final productMap = Map<String, dynamic>.from(productRaw);
+      prodId = productMap['id']?.toString() ?? '';
+      prodName = parseString(productMap['name']) ?? '';
+      
+      final img = productMap['primary_image'];
+      if (img is Map) {
+        prodImage = parseString(img['image']);
+      } else {
+        prodImage = parseString(img);
+      }
+    } else {
+      prodId = json['product_id']?.toString() ?? json['product']?.toString() ?? '';
+      prodName = parseString(json['product_name'] ?? json['name']) ?? '';
+      prodImage = parseString(json['product_image']);
+    }
+
+    final priceRaw = json['price_at_purchase'] ?? json['price'];
+    final quantityRaw = json['quantity'];
+    final qty = quantityRaw is num ? quantityRaw.toInt() : (int.tryParse(quantityRaw?.toString() ?? '') ?? 1);
+
     return OrderItem(
       id: json['id']?.toString() ?? '',
-      productId: json['product']?.toString() ?? json['product_id']?.toString() ?? '',
-      productName: json['product_name'] as String? ?? json['name'] as String? ?? '',
-      productImage: json['product_image'] as String?,
-      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-      price: (json['price'] as num?)?.toDouble() ?? 0,
+      productId: prodId,
+      productName: prodName,
+      productImage: prodImage,
+      quantity: qty,
+      price: parseDouble(priceRaw),
     );
   }
 }

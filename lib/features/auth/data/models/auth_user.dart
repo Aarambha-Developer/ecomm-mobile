@@ -14,12 +14,47 @@ class AuthUser {
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
+    String asString(dynamic value) {
+      if (value == null) return '';
+      if (value is String) return value;
+      if (value is Map) {
+        for (final key in ['full_name', 'name', 'email', 'title', 'value']) {
+          final nested = value[key];
+          if (nested is String && nested.isNotEmpty) return nested;
+        }
+      }
+      return value.toString();
+    }
+
+    String? asNullableString(dynamic value) {
+      final text = asString(value).trim();
+      return text.isEmpty ? null : text;
+    }
+
     return AuthUser(
       id: json['id']?.toString() ?? '',
-      email: json['email'] as String? ?? '',
-      phoneNumber: json['phone_number'] as String?,
-      fullName: json['full_name'] as String? ?? json['name'] as String?,
-      role: json['role'] as String? ?? 'user',
+      email: asString(json['email']),
+      phoneNumber: asNullableString(json['phone_number']),
+      fullName: asNullableString(json['full_name'] ?? json['name']),
+      role: asNullableString(json['role']) ?? 'user',
+    );
+  }
+
+  AuthUser copyWith({
+    String? id,
+    String? email,
+    String? phoneNumber,
+    bool clearPhone = false,
+    String? fullName,
+    bool clearFullName = false,
+    String? role,
+  }) {
+    return AuthUser(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      phoneNumber: clearPhone ? null : (phoneNumber ?? this.phoneNumber),
+      fullName: clearFullName ? null : (fullName ?? this.fullName),
+      role: role ?? this.role,
     );
   }
 

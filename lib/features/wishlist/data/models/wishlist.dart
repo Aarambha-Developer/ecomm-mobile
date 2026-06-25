@@ -36,8 +36,7 @@ class Wishlist {
     List<WishlistItem> parsedItems = [];
     if (json['items'] is List) {
       parsedItems = (json['items'] as List)
-          .whereType<Map<String, dynamic>>()
-          .map((e) => WishlistItem.fromJson(e))
+          .map((e) => WishlistItem.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     }
     return Wishlist(

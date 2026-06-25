@@ -10,7 +10,11 @@ class CartRepository {
 
   Future<Cart> getCart() async {
     final response = await _remoteSource.getCart();
-    return Cart.fromJson(response['data'] as Map<String, dynamic>);
+    final data = response['data'];
+    if (data is Map) {
+      return Cart.fromJson(Map<String, dynamic>.from(data));
+    }
+    return const Cart(id: '');
   }
 
   Future<Cart> addItem({required String productId, int quantity = 1}) async {

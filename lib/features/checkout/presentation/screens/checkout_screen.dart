@@ -162,7 +162,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (i) => setState(() => _currentStep = i),
               children: [
-                _AddressStep(controller: _addressController),
+                _AddressStep(
+                  controller: _addressController,
+                  onAddressChanged: () => setState(() {}),
+                ),
                 _PaymentStep(
                   paymentMethodsAsync: paymentMethodsAsync,
                   selectedMethodId: _selectedPaymentMethodId,
@@ -230,8 +233,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
 class _AddressStep extends StatelessWidget {
   final TextEditingController controller;
+  final VoidCallback onAddressChanged;
 
-  const _AddressStep({required this.controller});
+  const _AddressStep({
+    required this.controller,
+    required this.onAddressChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +265,7 @@ class _AddressStep extends StatelessWidget {
               hintText: 'Street, city, state, zip code, country...',
               alignLabelWithHint: true,
             ),
-            onChanged: (_) => (context as Element).markNeedsBuild(),
+            onChanged: (_) => onAddressChanged(),
           ),
           const SizedBox(height: 8),
           Text(

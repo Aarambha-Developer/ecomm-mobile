@@ -11,6 +11,8 @@ import 'package:aarambha_app/features/products/presentation/providers/product_pr
 import 'package:aarambha_app/features/categories/presentation/providers/category_provider.dart';
 import 'package:aarambha_app/features/brands/presentation/providers/brand_provider.dart';
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
+import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:aarambha_app/core/storage/local_cart_provider.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
   final String? initialCategorySlug;
@@ -130,43 +132,52 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _SearchBar(
-            controller: _searchController,
-            onSubmitted: _onSearch,
-            onClear: () {
-              _searchController.clear();
-              _onSearch('');
-            },
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.background, AppColors.surface],
           ),
-          if (state.totalCount > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  Text(
-                    '${state.totalCount} products',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const Spacer(),
-                  _SortDropdown(
-                    value: _selectedOrdering,
-                    onChanged: (v) {
-                      setState(() => _selectedOrdering = v);
-                      ref.read(productListProvider.notifier).setOrdering(v);
-                    },
-                  ),
-                ],
-              ),
+        ),
+        child: Column(
+          children: [
+            _SearchBar(
+              controller: _searchController,
+              onSubmitted: _onSearch,
+              onClear: () {
+                _searchController.clear();
+                _onSearch('');
+              },
             ),
-          Expanded(
-            child: _buildContent(state),
-          ),
-        ],
+            if (state.totalCount > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    Text(
+                      '${state.totalCount} products',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const Spacer(),
+                    _SortDropdown(
+                      value: _selectedOrdering,
+                      onChanged: (v) {
+                        setState(() => _selectedOrdering = v);
+                        ref.read(productListProvider.notifier).setOrdering(v);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: _buildContent(state),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -197,12 +208,12 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
       },
       child: GridView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.65,
+          childAspectRatio: 0.58,
           crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
+          mainAxisSpacing: 10,
         ),
         itemCount: state.products.length + (state.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
@@ -220,10 +231,22 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             product: product,
             onTap: () => context.push('/products/${product.slug}'),
             onAddToCart: () {
-              ref.read(cartProvider.notifier).addItem(
+              ref.read(localCartProvider.notifier).addItem(
                     productId: product.id,
+                    productName: product.name,
+                    productImage: product.primaryImage,
+                    price: product.discountedPrice > 0
+                        ? product.discountedPrice
+                        : product.price,
                     quantity: 1,
                   );
+              final authState = ref.read(authProvider);
+              if (authState.status == AuthStatus.authenticated) {
+                ref.read(cartProvider.notifier).addItem(
+                      productId: product.id,
+                      quantity: 1,
+                    );
+              }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('${product.name} added to cart')),
               );

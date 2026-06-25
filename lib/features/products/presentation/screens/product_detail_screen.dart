@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
@@ -17,6 +20,7 @@ import 'package:aarambha_app/features/products/data/models/product.dart';
 import 'package:aarambha_app/features/products/presentation/providers/product_provider.dart';
 import 'package:aarambha_app/features/products/presentation/providers/review_provider.dart';
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
+import 'package:aarambha_app/features/wishlist/presentation/providers/wishlist_provider.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -35,6 +39,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final productAsync = ref.watch(productDetailProvider(widget.slug));
+    final wishlistState = ref.watch(wishlistProvider);
 
     return Scaffold(
       body: productAsync.when(
@@ -47,7 +52,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             onRetry: () => ref.refresh(productDetailProvider(widget.slug)),
           ),
         ),
-        data: (product) => _buildContent(product),
+        data: (product) {
+          final isWishlisted = wishlistState.valueOrNull
+                  ?.items
+                  .any((item) => item.product.id == product.id) ??
+              false;
+          return _buildContent(product, isWishlisted: isWishlisted);
+        },
       ),
       bottomNavigationBar: productAsync.whenOrNull(
         data: (product) => product.inStock
@@ -86,7 +97,61 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     );
   }
 
-  Widget _buildContent(Product product) {
+  Future<void> _toggleWishlist(Product product) async {
+    final auth = ref.read(authProvider);
+    if (auth.status != AuthStatus.authenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please sign in to use wishlist')),
+        );
+        unawaited(context.push('/login'));
+      }
+      return;
+    }
+
+    final notifier = ref.read(wishlistProvider.notifier);
+    final wasWishlisted = notifier.isWishlisted(product.id);
+    await notifier.toggleItem(product.id);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            wasWishlisted
+                ? '${product.name} removed from wishlist'
+                : '${product.name} added to wishlist',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _shareProduct(Product product, BuildContext sourceContext) async {
+    final link = 'https://ecom.aitrc.com.np/products/${product.slug}';
+    final box = sourceContext.findRenderObject() as RenderBox?;
+    final fallbackSize = MediaQuery.sizeOf(context);
+    final fallbackRect = Rect.fromLTWH(0, 0, fallbackSize.width, fallbackSize.height);
+    final calculatedRect = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : fallbackRect;
+    final origin = calculatedRect.size.isEmpty ? fallbackRect : calculatedRect;
+
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          text: 'Check out ${product.name} on Lumora Nine\n$link',
+          sharePositionOrigin: origin,
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to open share dialog')),
+        );
+      }
+    }
+  }
+
+  Widget _buildContent(Product product, {required bool isWishlisted}) {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
@@ -106,12 +171,19 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.favorite_border),
-              onPressed: () {},
+              icon: Icon(
+                isWishlisted ? Icons.favorite : Icons.favorite_border,
+                color: isWishlisted ? AppColors.accent : null,
+              ),
+              onPressed: () => _toggleWishlist(product),
             ),
-            IconButton(
-              icon: const Icon(Icons.share_outlined),
-              onPressed: () {},
+            Builder(
+              builder: (shareContext) {
+                return IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  onPressed: () => _shareProduct(product, shareContext),
+                );
+              },
             ),
           ],
         ),

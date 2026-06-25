@@ -5,7 +5,8 @@ import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 
 class AccountScreen extends ConsumerWidget {
-  const AccountScreen({super.key});
+  final bool showAppBar;
+  const AccountScreen({super.key, this.showAppBar = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,105 +21,139 @@ class AccountScreen extends ConsumerWidget {
         : 'G';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Account')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: [
-          const SizedBox(height: 24),
-          Center(
-            child: GestureDetector(
-              onTap: authState.status == AuthStatus.authenticated
-                  ? () => context.push('/profile/edit')
-                  : null,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary, width: 2),
-                ),
-                child: CircleAvatar(
-                  radius: 44,
-                  backgroundColor: AppColors.primaryLight,
-                  child: Text(
-                    initial,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+      appBar: showAppBar ? AppBar(title: const Text('Account')) : null,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.glowMint, AppColors.background],
+          ),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  Center(
+                    child: GestureDetector(
+                      onTap: authState.status == AuthStatus.authenticated
+                          ? () => context.push('/profile/edit')
+                          : null,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.primary, width: 2),
+                        ),
+                        child: CircleAvatar(
+                          radius: 42,
+                          backgroundColor: AppColors.primaryLight,
+                          child: Text(
+                            initial,
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 14),
+                  Text(
+                    displayName,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  if (user?.phoneNumber != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        user!.phoneNumber!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            displayName,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          if (user?.phoneNumber != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                user!.phoneNumber!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-          const SizedBox(height: 36),
-          if (authState.status == AuthStatus.authenticated) ...[
-            _buildSection(context, 'Account Settings', [
-              _menuItem(context, Icons.person_outline, 'Edit Profile',
-                  onTap: () => context.push('/profile/edit')),
-              // TODO: 'Change Password' hidden - /auth/password/change/ endpoint does not exist in API spec
-              // _menuItem(context, Icons.lock_outline, 'Change Password',
-              //     onTap: () => context.push('/profile/change-password')),
-              // TODO: 'My Addresses' hidden - /addresses/ endpoint does not exist in API spec
-              // _menuItem(context, Icons.location_on_outlined, 'My Addresses',
-              //     onTap: () => context.push('/addresses')),
-            ]),
             const SizedBox(height: 16),
-          ],
-          _buildSection(context, 'Shopping', [
-            _menuItem(context, Icons.shopping_bag_outlined, 'My Orders',
-                onTap: () => context.push('/orders')),
-            _menuItem(context, Icons.favorite_outline, 'My Wishlist',
-                onTap: () => context.push('/wishlist')),
-          ]),
-          const SizedBox(height: 16),
-          _buildSection(context, 'Support', [
-            _menuItem(context, Icons.contact_mail_outlined, 'Contact Us',
-                onTap: () => context.push('/contact')),
-          ]),
-          const SizedBox(height: 24),
-          if (authState.status == AuthStatus.authenticated)
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ref.read(authProvider.notifier).logout();
-                  context.go('/');
-                },
-                icon: const Icon(Icons.logout, size: 20),
-                label: const Text('Sign Out'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  side: const BorderSide(color: AppColors.error),
+            if (authState.status == AuthStatus.authenticated) ...[
+              _buildSection(context, 'Account Settings', [
+                _menuItem(context, Icons.person_outline, 'Edit Profile',
+                    onTap: () => context.push('/profile/edit')),
+              ]),
+              const SizedBox(height: 14),
+            ] else ...[
+              _buildSection(context, 'Account', [
+                _menuItem(context, Icons.login_outlined, 'Login',
+                    onTap: () => context.push('/login')),
+                _menuItem(context, Icons.person_add_outlined, 'Signup',
+                    onTap: () => context.push('/register')),
+              ]),
+              const SizedBox(height: 14),
+            ],
+            _buildSection(context, 'Shopping', [
+              _menuItem(context, Icons.shopping_bag_outlined, 'My Orders',
+                  onTap: () => context.push('/orders')),
+              _menuItem(context, Icons.favorite_outline, 'My Wishlist',
+                  onTap: () => context.push('/wishlist')),
+            ]),
+            const SizedBox(height: 14),
+            _buildSection(context, 'Support', [
+              _menuItem(context, Icons.contact_mail_outlined, 'Contact Us',
+                  onTap: () => context.push('/contact-details')),
+              _menuItem(context, Icons.report_problem_outlined, 'Report Issue',
+                  onTap: () => context.push('/contact')),
+            ]),
+            const SizedBox(height: 14),
+            _buildSection(context, 'Legal & Info', [
+              _menuItem(context, Icons.policy_outlined, 'Policies',
+                  onTap: () => context.push('/policies')),
+              _menuItem(context, Icons.description_outlined, 'Terms and Conditions',
+                  onTap: () => context.push('/terms')),
+              _menuItem(context, Icons.info_outline, 'About Lumora Nine',
+                  onTap: () => context.push('/about')),
+            ]),
+            const SizedBox(height: 22),
+            if (authState.status == AuthStatus.authenticated)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ref.read(authProvider.notifier).logout();
+                    context.go('/');
+                  },
+                  icon: const Icon(Icons.logout, size: 20),
+                  label: const Text('Sign Out'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push('/login'),
+                  icon: const Icon(Icons.login, size: 20),
+                  label: const Text('Sign In'),
                 ),
               ),
-            )
-          else
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => context.push('/login'),
-                icon: const Icon(Icons.login, size: 20),
-                label: const Text('Sign In'),
-              ),
-            ),
-          const SizedBox(height: 32),
-        ],
+            const SizedBox(height: 30),
+          ],
+        ),
       ),
     );
   }
@@ -127,9 +162,9 @@ class AccountScreen extends ConsumerWidget {
       BuildContext context, String title, List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, width: 0.5),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
