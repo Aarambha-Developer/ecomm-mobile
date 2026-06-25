@@ -114,9 +114,13 @@ class _PaymentSelectionScreenState
         if (couponRateStr != null) {
           final rate = double.tryParse(couponRateStr);
           if (rate != null) {
-            ref
-                .read(paymentSelectionProvider.notifier)
-                .applyCouponLocally(rate);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                ref
+                    .read(paymentSelectionProvider.notifier)
+                    .applyCouponLocally(rate);
+              }
+            });
           }
         }
       }
