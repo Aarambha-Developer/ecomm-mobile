@@ -40,4 +40,17 @@ class HomeRepository {
     }
     return [];
   }
+
+  Future<List<Offer>> getStories() async {
+    final response = await _remoteSource.getStories();
+    final data = response['data'];
+    if (data is List) {
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map((e) => Offer.fromJson(e))
+          .where((o) => o.isActive)
+          .toList();
+    }
+    return [];
+  }
 }

@@ -23,6 +23,8 @@ import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/checkout/presentation/screens/payment_selection_screen.dart';
 import '../../features/contact/presentation/screens/contact_screen.dart';
 import '../../features/contact/presentation/screens/contact_details_screen.dart';
+import '../../features/home/data/models/home_models.dart';
+import '../../features/home/presentation/screens/story_viewer_screen.dart';
 // TODO: Re-enable when API endpoints are available
 // import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
 // import '../../features/addresses/presentation/screens/address_form_screen.dart';
@@ -79,6 +81,18 @@ class AppRouter {
       GoRoute(
         path: '/',
         builder: (context, state) => const MainLayoutScreen(),
+      ),
+      GoRoute(
+        path: '/stories',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          final stories = extra['stories'] as List<Offer>;
+          final initialIndex = extra['initialIndex'] as int;
+          return StoryViewerScreen(
+            stories: stories,
+            initialIndex: initialIndex,
+          );
+        },
       ),
       GoRoute(
         path: '/cart',

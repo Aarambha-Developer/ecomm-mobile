@@ -462,13 +462,12 @@ class _StoriesSection extends StatelessWidget {
                 final imageUrl = story.image;
                 return GestureDetector(
                   onTap: () {
-                    showDialog<void>(
-                      context: context,
-                      barrierColor: Colors.black87,
-                      builder: (_) => _StoryViewerDialog(
-                        stories: stories,
-                        initialIndex: index,
-                      ),
+                    context.push(
+                      '/stories',
+                      extra: {
+                        'stories': stories,
+                        'initialIndex': index,
+                      },
                     );
                   },
                   child: Column(
@@ -543,146 +542,7 @@ class _StoriesSection extends StatelessWidget {
   }
 }
 
-class _StoryViewerDialog extends StatefulWidget {
-  final List<Offer> stories;
-  final int initialIndex;
 
-  const _StoryViewerDialog({required this.stories, required this.initialIndex});
-
-  @override
-  State<_StoryViewerDialog> createState() => _StoryViewerDialogState();
-}
-
-class _StoryViewerDialogState extends State<_StoryViewerDialog> {
-  late final PageController _controller =
-      PageController(initialPage: widget.initialIndex);
-  late int _index = widget.initialIndex;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog.fullscreen(
-      backgroundColor: Colors.black,
-      child: SafeArea(
-        child: Stack(
-          children: [
-            PageView.builder(
-              controller: _controller,
-              itemCount: widget.stories.length,
-              onPageChanged: (value) => setState(() => _index = value),
-              itemBuilder: (context, index) {
-                final story = widget.stories[index];
-                return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (story.image != null)
-                      CachedNetworkImage(
-                        imageUrl: story.image!,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, _, _) => _storyBackground(story),
-                      )
-                    else
-                      _storyBackground(story),
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0x99000000), Colors.transparent, Color(0xC0000000)],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 20,
-                      right: 20,
-                      bottom: 48,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            story.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          if (story.description != null && story.description!.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              story.description!,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-            Positioned(
-              left: 12,
-              right: 12,
-              top: 10,
-              child: Row(
-                children: List.generate(widget.stories.length, (i) {
-                  return Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      height: 3,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(3),
-                        color: i <= _index ? Colors.white : Colors.white30,
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close_rounded, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _storyBackground(Offer story) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primaryDark, AppColors.primary],
-        ),
-      ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Text(
-            story.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _CategoriesSection extends StatelessWidget {
   final AsyncValue<List<Category>> categoriesAsync;

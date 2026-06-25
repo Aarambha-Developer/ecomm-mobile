@@ -97,4 +97,11 @@ class CatalogRemoteSource {
       queryParameters: {'is_active': true},
     );
   }
+
+  Future<Map<String, dynamic>> getStories() async {
+    return await _client.get(
+      ApiConstants.offers,
+      queryParameters: {'category': 'story', 'is_active': true},
+    );
+  }
 }

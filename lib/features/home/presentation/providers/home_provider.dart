@@ -19,9 +19,7 @@ final offersProvider = FutureProvider<List<Offer>>((ref) async {
   return await repo.getActiveOffers();
 });
 
-final storyOffersProvider = Provider<AsyncValue<List<Offer>>>((ref) {
-  final offers = ref.watch(offersProvider);
-  return offers.whenData(
-    (items) => items.where((o) => o.category == 'story').toList(),
-  );
+final storyOffersProvider = FutureProvider<List<Offer>>((ref) async {
+  final repo = ref.read(homeRepositoryProvider);
+  return await repo.getStories();
 });
