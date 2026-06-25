@@ -86,17 +86,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             controller: _scrollController,
             children: [
               _HeroSection(heroAsync: heroAsync),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _StoriesSection(storiesAsync: storiesAsync),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               _CategoriesSection(categoriesAsync: categoriesAsync),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               _OffersSection(offersAsync: offersAsync),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               _ProductsGrid(productsState: productsState),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               _BrandsSection(brandsAsync: brandsAsync),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               _Footer(),
             ],
           ),
@@ -416,13 +416,15 @@ children: [
   }
 }
 
-class _StoriesSection extends StatelessWidget {
+class _StoriesSection extends ConsumerWidget {
   final AsyncValue<List<Offer>> storiesAsync;
 
   const _StoriesSection({required this.storiesAsync});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewedStories = ref.watch(viewedStoriesProvider);
+
     return storiesAsync.when(
       loading: () => _sectionShimmer(
         title: 'Stories',
@@ -460,6 +462,8 @@ class _StoriesSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final story = stories[index];
                 final imageUrl = story.image;
+                final isViewed = viewedStories.contains(story.id);
+
                 return GestureDetector(
                   onTap: () {
                     context.push(
@@ -476,18 +480,23 @@ class _StoriesSection extends StatelessWidget {
                         width: 72,
                         height: 72,
                         padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [AppColors.primary, AppColors.accent],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          border: isViewed
+                              ? Border.all(color: Colors.grey.shade300, width: 1.5)
+                              : null,
+                          gradient: isViewed
+                              ? null
+                              : const LinearGradient(
+                                  colors: [AppColors.primary, AppColors.accent],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.cardShadow,
-                              blurRadius: 8,
-                              offset: Offset(0, 3),
+                              blurRadius: isViewed ? 2 : 8,
+                              offset: Offset(0, isViewed ? 1 : 3),
                             ),
                           ],
                         ),
@@ -514,10 +523,10 @@ class _StoriesSection extends StatelessWidget {
                           textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: isViewed ? AppColors.textSecondary : AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -1021,7 +1030,7 @@ class _SectionHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 title,
@@ -1032,6 +1041,11 @@ class _SectionHeader extends StatelessWidget {
               if (onViewAll != null)
                 TextButton(
                   onPressed: onViewAll,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1046,7 +1060,7 @@ class _SectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         child,
       ],
     );

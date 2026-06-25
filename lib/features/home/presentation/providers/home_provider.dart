@@ -23,3 +23,19 @@ final storyOffersProvider = FutureProvider<List<Offer>>((ref) async {
   final repo = ref.read(homeRepositoryProvider);
   return await repo.getStories();
 });
+
+final viewedStoriesProvider = StateNotifierProvider<ViewedStoriesNotifier, Set<String>>((ref) {
+  return ViewedStoriesNotifier();
+});
+
+class ViewedStoriesNotifier extends StateNotifier<Set<String>> {
+  ViewedStoriesNotifier() : super({});
+
+  void markAsViewed(String id) {
+    if (id.isEmpty) return;
+    if (!state.contains(id)) {
+      state = {...state, id};
+    }
+  }
+}
+

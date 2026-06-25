@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/features/home/data/models/home_models.dart';
+import 'package:aarambha_app/features/home/presentation/providers/home_provider.dart';
 
-class StoryViewerScreen extends StatefulWidget {
+class StoryViewerScreen extends ConsumerStatefulWidget {
   final List<Offer> stories;
   final int initialIndex;
 
@@ -15,10 +17,10 @@ class StoryViewerScreen extends StatefulWidget {
   });
 
   @override
-  State<StoryViewerScreen> createState() => _StoryViewerScreenState();
+  ConsumerState<StoryViewerScreen> createState() => _StoryViewerScreenState();
 }
 
-class _StoryViewerScreenState extends State<StoryViewerScreen> with TickerProviderStateMixin {
+class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen> with TickerProviderStateMixin {
   late final PageController _pageController;
   late int _currentIndex;
   late AnimationController _progressController;
@@ -30,6 +32,14 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with TickerProvid
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: _currentIndex);
     _initAnimationController();
+    _markCurrentStoryAsViewed();
+  }
+
+  void _markCurrentStoryAsViewed() {
+    if (widget.stories.isNotEmpty && _currentIndex >= 0 && _currentIndex < widget.stories.length) {
+      final storyId = widget.stories[_currentIndex].id;
+      ref.read(viewedStoriesProvider.notifier).markAsViewed(storyId);
+    }
   }
 
   void _initAnimationController() {
@@ -81,6 +91,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with TickerProvid
     });
     _progressController.reset();
     _progressController.forward();
+    _markCurrentStoryAsViewed();
   }
 
   void _handleTap(TapUpDetails details) {

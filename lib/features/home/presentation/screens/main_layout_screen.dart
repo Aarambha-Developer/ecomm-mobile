@@ -7,7 +7,7 @@ import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 import 'package:aarambha_app/features/home/presentation/screens/home_screen.dart';
 import 'package:aarambha_app/features/products/presentation/screens/explore_screen.dart';
-import 'package:aarambha_app/features/brands/presentation/screens/brands_screen.dart';
+import 'package:aarambha_app/features/categories/presentation/screens/categories_screen.dart';
 import 'package:aarambha_app/features/home/presentation/screens/offers_screen.dart';
 import 'package:aarambha_app/features/account/presentation/screens/account_screen.dart';
 import 'package:aarambha_app/features/wishlist/presentation/providers/wishlist_provider.dart';
@@ -30,7 +30,7 @@ class MainLayoutScreen extends ConsumerWidget {
     final screens = const [
       HomeScreen(),
       ExploreScreen(),
-      BrandsScreen(),
+      CategoriesScreen(),
       OffersScreen(),
       AccountScreen(),
     ];
@@ -38,7 +38,7 @@ class MainLayoutScreen extends ConsumerWidget {
     final titles = const [
       'Lumora Nine',
       'Explore Products',
-      'Our Brands',
+      'Categories',
       'Special Offers',
       'Account',
     ];
@@ -240,9 +240,9 @@ class MainLayoutScreen extends ConsumerWidget {
             label: 'Explore',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.branding_watermark_outlined),
-            activeIcon: Icon(Icons.branding_watermark),
-            label: 'Brands',
+            icon: Icon(Icons.category_outlined),
+            activeIcon: Icon(Icons.category),
+            label: 'Categories',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.local_offer_outlined),
