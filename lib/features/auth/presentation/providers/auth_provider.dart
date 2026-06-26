@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/secure_storage.dart';
@@ -42,7 +43,6 @@ class AuthState {
     );
   }
 }
-
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
@@ -104,7 +104,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        clientId: '474582563463-d0fqcbkmclnrv839jeetefcapsr07e4f.apps.googleusercontent.com',
+        clientId: Platform.isIOS
+            ? '1004529034197-sbmnkjorrubqslu7v7hp4ekhf37msnv3.apps.googleusercontent.com'
+            : '474582563463-d0fqcbkmclnrv839jeetefcapsr07e4f.apps.googleusercontent.com',
         scopes: ['email', 'profile'],
       );
       final GoogleSignInAccount? account = await googleSignIn.signIn();
