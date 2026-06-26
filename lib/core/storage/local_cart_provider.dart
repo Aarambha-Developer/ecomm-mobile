@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'secure_storage.dart';
 
 class LocalCartItem {
   final String productId;
@@ -24,6 +26,26 @@ class LocalCartItem {
       quantity: quantity ?? this.quantity,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'product_id': productId,
+      'product_name': productName,
+      'product_image': productImage,
+      'price': price,
+      'quantity': quantity,
+    };
+  }
+
+  factory LocalCartItem.fromJson(Map<String, dynamic> json) {
+    return LocalCartItem(
+      productId: json['product_id'] as String,
+      productName: json['product_name'] as String,
+      productImage: json['product_image'] as String?,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      quantity: json['quantity'] as int? ?? 1,
+    );
+  }
 }
 
 class LocalCart {
@@ -38,7 +60,34 @@ class LocalCart {
 }
 
 class LocalCartNotifier extends StateNotifier<LocalCart> {
-  LocalCartNotifier() : super(const LocalCart());
+  final SecureStorage _storage;
+  static const _localCartStorageKey = 'local_cart_items';
+
+  LocalCartNotifier(this._storage) : super(const LocalCart()) {
+    _loadFromStorage();
+  }
+
+  Future<void> _loadFromStorage() async {
+    try {
+      final jsonStr = await _storage.read(_localCartStorageKey);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final decoded = jsonDecode(jsonStr);
+        if (decoded is List) {
+          final items = decoded
+              .map((item) => LocalCartItem.fromJson(Map<String, dynamic>.from(item as Map)))
+              .toList();
+          state = LocalCart(items: items);
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveToStorage() async {
+    try {
+      final serialized = jsonEncode(state.items.map((e) => e.toJson()).toList());
+      await _storage.write(_localCartStorageKey, serialized);
+    } catch (_) {}
+  }
 
   void addItem({
     required String productId,
@@ -70,12 +119,14 @@ class LocalCartNotifier extends StateNotifier<LocalCart> {
         ],
       );
     }
+    _saveToStorage();
   }
 
   void removeItem(String productId) {
     state = LocalCart(
       items: state.items.where((i) => i.productId != productId).toList(),
     );
+    _saveToStorage();
   }
 
   void updateQuantity(String productId, int quantity) {
@@ -89,14 +140,17 @@ class LocalCartNotifier extends StateNotifier<LocalCart> {
               i.productId == productId ? i.copyWith(quantity: quantity) : i)
           .toList(),
     );
+    _saveToStorage();
   }
 
   void clear() {
     state = const LocalCart();
+    _saveToStorage();
   }
 }
 
 final localCartProvider =
     StateNotifierProvider<LocalCartNotifier, LocalCart>((ref) {
-  return LocalCartNotifier();
+  final storage = ref.read(secureStorageProvider);
+  return LocalCartNotifier(storage);
 });

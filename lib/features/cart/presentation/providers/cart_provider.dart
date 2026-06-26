@@ -9,7 +9,7 @@ final cartRepositoryProvider = Provider<CartRepository>((ref) {
 });
 
 final storageProvider = Provider<SecureStorage>((ref) {
-  return ref.read(apiClientProvider).storage;
+  return ref.read(secureStorageProvider);
 });
 
 class CartNotifier extends StateNotifier<AsyncValue<Cart>> {

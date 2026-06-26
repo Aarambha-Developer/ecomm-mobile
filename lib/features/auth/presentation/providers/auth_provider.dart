@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/storage/secure_storage.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/auth_user.dart';
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+final apiClientProvider = Provider<ApiClient>((ref) {
+  final storage = ref.read(secureStorageProvider);
+  return ApiClient(storage);
+});
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final apiClient = ref.read(apiClientProvider);

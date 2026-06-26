@@ -1,4 +1,9 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final secureStorageProvider = Provider<SecureStorage>((ref) {
+  return SecureStorage();
+});
 
 class SecureStorage {
   static const _accessTokenKey = 'access_token';
@@ -9,7 +14,22 @@ class SecureStorage {
   SecureStorage()
       : _storage = const FlutterSecureStorage(
           aOptions: AndroidOptions(),
+          iOptions: IOSOptions(
+            accessibility: KeychainAccessibility.first_unlock,
+          ),
         );
+
+  Future<void> write(String key, String value) async {
+    await _storage.write(key: key, value: value);
+  }
+
+  Future<String?> read(String key) async {
+    return await _storage.read(key: key);
+  }
+
+  Future<void> delete(String key) async {
+    await _storage.delete(key: key);
+  }
 
   Future<void> saveAccessToken(String token) async {
     await _storage.write(key: _accessTokenKey, value: token);

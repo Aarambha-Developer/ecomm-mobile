@@ -7,13 +7,12 @@ import 'api_exceptions.dart';
 
 class ApiClient {
   late final Dio _dio;
-  late final SecureStorage _storage;
+  final SecureStorage _storage;
   final _authFailureController = StreamController<void>.broadcast();
 
   Stream<void> get authFailureStream => _authFailureController.stream;
 
-  ApiClient() {
-    _storage = SecureStorage();
+  ApiClient(this._storage) {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
