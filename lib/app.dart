@@ -66,8 +66,6 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
       title: 'Lumora Nine',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
       routerConfig: _router,
     );
   }

@@ -4,6 +4,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/auth_user.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.read(secureStorageProvider);
@@ -83,6 +84,40 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
     try {
       var user = await _repository.login(email, password);
+      final localName = await _repository.getLocalName(user.id);
+      if (localName != null && localName.isNotEmpty) {
+        user = user.copyWith(fullName: localName);
+      }
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> loginWithGoogle() async {
+    state = state.copyWith(status: AuthStatus.loading, clearError: true);
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId: '474582563463-d0fqcbkmclnrv839jeetefcapsr07e4f.apps.googleusercontent.com',
+        scopes: ['email', 'profile'],
+      );
+      final GoogleSignInAccount? account = await googleSignIn.signIn();
+      if (account == null) {
+        state = state.copyWith(status: AuthStatus.unauthenticated);
+        return;
+      }
+      final GoogleSignInAuthentication auth = await account.authentication;
+      final String? idToken = auth.idToken;
+      if (idToken == null) {
+        throw Exception('Google Sign-In failed: No ID Token found.');
+      }
+      var user = await _repository.googleLogin(idToken);
       final localName = await _repository.getLocalName(user.id);
       if (localName != null && localName.isNotEmpty) {
         user = user.copyWith(fullName: localName);

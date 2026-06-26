@@ -154,6 +154,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  const Row(
+                    children: [
+                      Expanded(child: Divider(color: AppColors.border)),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('OR', style: TextStyle(color: AppColors.textSecondary)),
+                      ),
+                      Expanded(child: Divider(color: AppColors.border)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () => ref.read(authProvider.notifier).loginWithGoogle(),
+                    icon: Image.network(
+                      'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.png',
+                      height: 20,
+                    ),
+                    label: const Text('Continue with Google'),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
