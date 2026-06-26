@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/storage/secure_storage.dart';
@@ -7,6 +8,9 @@ import 'api_exceptions.dart';
 class ApiClient {
   late final Dio _dio;
   late final SecureStorage _storage;
+  final _authFailureController = StreamController<void>.broadcast();
+
+  Stream<void> get authFailureStream => _authFailureController.stream;
 
   ApiClient() {
     _storage = SecureStorage();
@@ -23,7 +27,11 @@ class ApiClient {
     );
 
     _dio.interceptors.addAll([
-      AuthInterceptor(_storage, _dio),
+      AuthInterceptor(
+        _storage,
+        _dio,
+        onAuthFailure: () => _authFailureController.add(null),
+      ),
       LogInterceptor(
         requestBody: true,
         responseBody: true,

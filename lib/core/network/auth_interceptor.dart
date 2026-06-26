@@ -6,9 +6,10 @@ import '../../core/constants/api_constants.dart';
 class AuthInterceptor extends Interceptor {
   final SecureStorage _storage;
   final Dio _dio;
+  final void Function()? onAuthFailure;
   Completer<void>? _refreshCompleter;
 
-  AuthInterceptor(this._storage, this._dio);
+  AuthInterceptor(this._storage, this._dio, {this.onAuthFailure});
 
   @override
   void onRequest(
@@ -54,6 +55,7 @@ class AuthInterceptor extends Interceptor {
   ) async {
     if (err.requestOptions.path.contains(ApiConstants.refreshToken)) {
       await _storage.clearTokens();
+      onAuthFailure?.call();
       handler.reject(err);
       return;
     }
@@ -67,6 +69,7 @@ class AuthInterceptor extends Interceptor {
         } catch (_) {}
       }
       await _storage.clearTokens();
+      onAuthFailure?.call();
       handler.reject(err);
     } else {
       handler.reject(err);

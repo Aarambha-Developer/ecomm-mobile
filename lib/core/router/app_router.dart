@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +30,23 @@ import '../../features/home/presentation/screens/story_viewer_screen.dart';
 // import '../../features/addresses/presentation/screens/address_form_screen.dart';
 // import '../../features/addresses/data/models/address.dart';
 
+class GoRouterRefreshStream extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _subscription;
+
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+          (dynamic _) => notifyListeners(),
+        );
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 class AppRouter {
   final GlobalKey<NavigatorState> _rootNavigatorKey;
   final WidgetRef _ref;
@@ -54,6 +72,7 @@ class AppRouter {
   late final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    refreshListenable: GoRouterRefreshStream(_ref.read(authProvider.notifier).stream),
     redirect: (context, state) {
       final authState = _ref.read(authProvider);
       final isLoggedIn = authState.status == AuthStatus.authenticated;

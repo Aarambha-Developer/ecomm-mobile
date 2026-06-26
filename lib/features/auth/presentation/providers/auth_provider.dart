@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -37,11 +38,23 @@ class AuthState {
   }
 }
 
+
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  final ApiClient _apiClient;
+  late final StreamSubscription<void> _authFailureSubscription;
 
-  AuthNotifier(this._repository) : super(const AuthState()) {
+  AuthNotifier(this._repository, this._apiClient) : super(const AuthState()) {
     _tryAutoLogin();
+    _authFailureSubscription = _apiClient.authFailureStream.listen((_) {
+      logout();
+    });
+  }
+
+  @override
+  void dispose() {
+    _authFailureSubscription.cancel();
+    super.dispose();
   }
 
   Future<void> _tryAutoLogin() async {
@@ -122,5 +135,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.read(authRepositoryProvider);
-  return AuthNotifier(repository);
+  final apiClient = ref.read(apiClientProvider);
+  return AuthNotifier(repository, apiClient);
 });
