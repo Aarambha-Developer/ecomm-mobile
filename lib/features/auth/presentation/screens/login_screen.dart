@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aarambha_app/core/theme/app_colors.dart';
+import 'package:aarambha_app/core/utils/toast_utils.dart';
 import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -46,12 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context.go(redirectTo ?? '/');
       }
       if (next.error != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppToast.showError(context, next.error!);
         ref.read(authProvider.notifier).clearError();
       }
     });
@@ -166,15 +162,89 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: isLoading
-                        ? null
-                        : () => ref.read(authProvider.notifier).loginWithGoogle(),
-                    icon: Image.network(
-                      'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.png',
-                      height: 20,
+                  
+                  // Google Sign In (Official Branding Guidelines)
+                  Container(
+                    height: 50,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF1F1F1F),
+                        side: const BorderSide(color: Color(0xFFDADCE0), width: 1.2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: isLoading
+                          ? null
+                          : () => ref.read(authProvider.notifier).loginWithGoogle(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.network(
+                            'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.png',
+                            height: 20,
+                            width: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Sign in with Google',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1F1F1F),
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    label: const Text('Continue with Google'),
+                  ),
+                  
+                  // Apple Sign In (Official Branding Guidelines)
+                  Container(
+                    height: 50,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              AppToast.showInfo(
+                                context,
+                                'Sign in with Apple is simulated in this development environment.',
+                              );
+                            },
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.apple,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Sign in with Apple',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
