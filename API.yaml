@@ -2337,6 +2337,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdminUser'
           description: ''
+  /api/v1/auth/apple/:
+    post:
+      operationId: auth_apple_create
+      description: Base API view with common functionality.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppleLoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppleLoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppleLoginRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppleLogin'
+          description: ''
   /api/v1/auth/google/:
     post:
       operationId: auth_google_create
@@ -3045,6 +3072,18 @@ paths:
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: slug
+        schema:
+          type: string
+      - in: query
+        name: target_brand__slug
+        schema:
+          type: string
+      - in: query
+        name: target_category__slug
+        schema:
+          type: string
       tags:
       - offers
       security:
@@ -3059,17 +3098,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedOfferList'
           description: ''
-  /api/v1/offers/{id}/:
+  /api/v1/offers/{slug}/:
     get:
       operationId: offers_retrieve
       description: Base ViewSet for read-only operations.
       parameters:
       - in: path
-        name: id
+        name: slug
         schema:
           type: string
-          format: uuid
-        description: A UUID string identifying this offer.
         required: true
       tags:
       - offers
@@ -3649,6 +3686,21 @@ components:
       - is_email_verified
       - phone_number
       - username
+    AppleLogin:
+      type: object
+      properties:
+        id_token:
+          type: string
+      required:
+      - id_token
+    AppleLoginRequest:
+      type: object
+      properties:
+        id_token:
+          type: string
+          minLength: 1
+      required:
+      - id_token
     BlankEnum:
       enum:
       - ''
@@ -3778,20 +3830,43 @@ components:
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           readOnly: true
+        base_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
         subtotal:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        base_subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        total_savings:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        applied_offers:
+          type: array
+          items: {}
           readOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
       required:
+      - applied_offers
+      - base_price
+      - base_subtotal
       - created_at
       - id
       - product
       - subtotal
+      - total_savings
       - unit_price
     CartItemUpdate:
       type: object
@@ -4136,15 +4211,6 @@ components:
           type: string
           maxLength: 50
           minLength: 3
-        cart_total:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        product_ids:
-          type: array
-          items:
-            type: string
-            format: uuid
       required:
       - code
     CouponValidateRequest:
@@ -4154,15 +4220,6 @@ components:
           type: string
           minLength: 3
           maxLength: 50
-        cart_total:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        product_ids:
-          type: array
-          items:
-            type: string
-            format: uuid
       required:
       - code
     DiscountTypeEnum:
@@ -4447,6 +4504,10 @@ components:
         title:
           type: string
           maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
         category:
           $ref: '#/components/schemas/CategoryEnum'
         image:
@@ -4486,6 +4547,22 @@ components:
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
+        target_brand:
+          allOf:
+          - $ref: '#/components/schemas/BrandPublic'
+          readOnly: true
+        target_category:
+          allOf:
+          - $ref: '#/components/schemas/Category'
+          readOnly: true
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfferProduct'
+          readOnly: true
+        products_count:
+          type: integer
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -4495,6 +4572,10 @@ components:
       - created_at
       - id
       - link
+      - products
+      - products_count
+      - target_brand
+      - target_category
       - title
     OfferAdmin:
       type: object
@@ -4506,6 +4587,10 @@ components:
         title:
           type: string
           maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
         category:
           $ref: '#/components/schemas/CategoryEnum'
         image:
@@ -4582,6 +4667,10 @@ components:
           type: string
           minLength: 1
           maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
         category:
           $ref: '#/components/schemas/CategoryEnum'
         image:
@@ -4641,6 +4730,39 @@ components:
       - category
       - link
       - title
+    OfferProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        discounted_price:
+          type: number
+          format: double
+          readOnly: true
+        primary_image:
+          type: string
+          readOnly: true
+      required:
+      - discounted_price
+      - id
+      - name
+      - price
+      - primary_image
+      - slug
     OrderDetail:
       type: object
       properties:
@@ -5500,6 +5622,10 @@ components:
           type: string
           minLength: 1
           maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
         category:
           $ref: '#/components/schemas/CategoryEnum'
         image:
@@ -5926,6 +6052,15 @@ components:
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           readOnly: true
+        best_offer_pct:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        applicable_offers:
+          type: array
+          items: {}
+          readOnly: true
         stock_quantity:
           type: integer
           maximum: 9223372036854775807
@@ -5959,6 +6094,8 @@ components:
             $ref: '#/components/schemas/ProductReview'
           readOnly: true
       required:
+      - applicable_offers
+      - best_offer_pct
       - brand
       - category
       - created_at
@@ -6046,6 +6183,15 @@ components:
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           readOnly: true
+        best_offer_pct:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        applicable_offers:
+          type: array
+          items: {}
+          readOnly: true
         stock_quantity:
           type: integer
           maximum: 9223372036854775807
@@ -6068,6 +6214,8 @@ components:
           format: date-time
           readOnly: true
       required:
+      - applicable_offers
+      - best_offer_pct
       - brand
       - category
       - created_at

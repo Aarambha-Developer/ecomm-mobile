@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:clarity_flutter/clarity_flutter.dart';
+
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/storage/local_cart_provider.dart';
@@ -19,6 +22,26 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
   late final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>();
   late final GoRouter _router = AppRouter(_rootNavigatorKey, ref).router;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initAnalyticsAndTracking();
+    });
+  }
+
+  Future<void> _initAnalyticsAndTracking() async {
+    try {
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (status == TrackingStatus.notDetermined) {
+        await Future.delayed(const Duration(milliseconds: 1000));
+        await AppTrackingTransparency.requestTrackingAuthorization();
+      }
+    } catch (_) {
+      // Safe guard against errors on unsupported platforms/versions
+    }
+  }
 
   @override
   void dispose() {
@@ -62,11 +85,14 @@ class _AarambhaAppState extends ConsumerState<AarambhaApp> {
       }
     });
 
-    return MaterialApp.router(
-      title: 'Lumora Nine',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      routerConfig: _router,
+    return ClarityWidget(
+      clarityConfig: ClarityConfig(projectId: 'xdf5l7xrrq'),
+      app: MaterialApp.router(
+        title: 'Lumora Nine',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        routerConfig: _router,
+      ),
     );
   }
 }

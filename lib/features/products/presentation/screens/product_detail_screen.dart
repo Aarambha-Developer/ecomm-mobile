@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/utils/formatters.dart';
+import 'package:aarambha_app/core/utils/toast_utils.dart';
 import 'package:aarambha_app/core/storage/local_cart_provider.dart';
 import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:aarambha_app/core/widgets/loading_widget.dart';
@@ -88,9 +89,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           quantity: _quantity,
                         );
                   }
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${product.name} added to cart')),
-                  );
+                  AppToast.showSuccess(context, '${product.name} added to cart');
                 },
               )
             : null,
@@ -102,9 +101,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final auth = ref.read(authProvider);
     if (auth.status != AuthStatus.authenticated) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please sign in to use wishlist')),
-        );
+        AppToast.showInfo(context, 'Please sign in to use wishlist');
         unawaited(context.push('/login'));
       }
       return;
@@ -114,14 +111,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final wasWishlisted = notifier.isWishlisted(product.id);
     await notifier.toggleItem(product.id);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            wasWishlisted
-                ? '${product.name} removed from wishlist'
-                : '${product.name} added to wishlist',
-          ),
-        ),
+      AppToast.showSuccess(
+        context,
+        wasWishlisted
+            ? '${product.name} removed from wishlist'
+            : '${product.name} added to wishlist',
       );
     }
   }
@@ -145,9 +139,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       );
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to open share dialog')),
-        );
+        AppToast.showError(context, 'Unable to open share dialog');
       }
     }
   }
@@ -617,18 +609,11 @@ class _ReviewFormState extends ConsumerState<_ReviewForm> {
       setState(() => _rating = 5);
       widget.onSubmit();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Review submitted!')),
-        );
+        AppToast.showSuccess(context, 'Review submitted!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppToast.showError(context, 'Failed: ${e.toString()}');
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

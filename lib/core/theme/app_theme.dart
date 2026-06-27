@@ -161,6 +161,20 @@ class AppTheme {
           thickness: 1,
           space: 0,
         ),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.surface,
+          contentTextStyle: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: AppColors.border, width: 1.2),
+          ),
+          elevation: 3,
+        ),
         textTheme: const TextTheme(
           displayLarge: TextStyle(
             fontSize: 32,

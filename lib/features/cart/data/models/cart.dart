@@ -1,3 +1,29 @@
+class AppliedOffer {
+  final String title;
+  final String discountType;
+  final double discountValue;
+
+  const AppliedOffer({
+    required this.title,
+    required this.discountType,
+    required this.discountValue,
+  });
+
+  factory AppliedOffer.fromJson(Map<String, dynamic> json) {
+    double parsePrice(dynamic val) {
+      if (val == null) return 0;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? 0;
+    }
+
+    return AppliedOffer(
+      title: json['title']?.toString() ?? '',
+      discountType: json['discount_type']?.toString() ?? '',
+      discountValue: parsePrice(json['discount_value']),
+    );
+  }
+}
+
 class CartItem {
   final String id;
   final String productId;
@@ -6,8 +32,12 @@ class CartItem {
   final String? productImage;
   final double unitPrice;
   final double subtotal;
+  final double basePrice;
+  final double baseSubtotal;
+  final double totalSavings;
   final int quantity;
   final int stockQuantity;
+  final List<AppliedOffer> appliedOffers;
 
   const CartItem({
     required this.id,
@@ -17,8 +47,12 @@ class CartItem {
     this.productImage,
     required this.unitPrice,
     required this.subtotal,
+    this.basePrice = 0.0,
+    this.baseSubtotal = 0.0,
+    this.totalSavings = 0.0,
     required this.quantity,
     this.stockQuantity = 0,
+    this.appliedOffers = const [],
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -43,16 +77,32 @@ class CartItem {
       }
     }
 
+    List<AppliedOffer> parsedOffers = [];
+    if (json['applied_offers'] is List) {
+      parsedOffers = (json['applied_offers'] as List)
+          .map((e) => e is Map ? AppliedOffer.fromJson(Map<String, dynamic>.from(e)) : null)
+          .whereType<AppliedOffer>()
+          .toList();
+    }
+
+    final double uPrice = parsePrice(json['unit_price']);
+    final double qty = (json['quantity'] as num? ?? 1).toDouble();
+    final double bPrice = json['base_price'] != null ? parsePrice(json['base_price']) : parsePrice(product?['price'] ?? uPrice);
+
     return CartItem(
       id: json['id']?.toString() ?? '',
       productId: product?['id']?.toString() ?? '',
       productName: product?['name'] as String? ?? '',
       productSlug: product?['slug'] as String?,
       productImage: prodImage,
-      unitPrice: parsePrice(json['unit_price']),
+      unitPrice: uPrice,
       subtotal: parsePrice(json['subtotal']),
+      basePrice: bPrice,
+      baseSubtotal: json['base_subtotal'] != null ? parsePrice(json['base_subtotal']) : (bPrice * qty),
+      totalSavings: json['total_savings'] != null ? parsePrice(json['total_savings']) : 0.0,
       quantity: json['quantity'] as int? ?? 1,
       stockQuantity: product?['stock_quantity'] as int? ?? 0,
+      appliedOffers: parsedOffers,
     );
   }
 }

@@ -2,12 +2,16 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
+import 'package:gal/gal.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/utils/formatters.dart';
+import 'package:aarambha_app/core/utils/toast_utils.dart';
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 import 'package:aarambha_app/features/checkout/data/models/order_request.dart';
 import 'package:aarambha_app/features/checkout/data/models/payment_method.dart';
@@ -39,6 +43,30 @@ class _PaymentSelectionScreenState
     return '$baseDomain/$path';
   }
 
+  Future<void> _downloadQrCode(String imageUrl) async {
+    try {
+      if (!mounted) return;
+      AppToast.showInfo(context, "Downloading QR Code...");
+
+      final response = await Dio().get<List<int>>(
+        imageUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final bytes = response.data;
+      if (bytes == null) throw Exception("Failed to download image bytes");
+
+      await Gal.putImageBytes(Uint8List.fromList(bytes));
+
+      if (mounted) {
+        AppToast.showSuccess(context, "QR Code saved to gallery!");
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, "Failed to save QR Code: ${e.toString()}");
+      }
+    }
+  }
+
   @override
   void dispose() {
     _addressController.dispose();
@@ -63,10 +91,7 @@ class _PaymentSelectionScreenState
   Future<void> _completeCheckout() async {
     final address = _addressController.text.trim();
     if (address.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please enter a valid shipping address')),
-      );
+      AppToast.showError(context, 'Please enter a valid shipping address');
       return;
     }
 
@@ -93,9 +118,7 @@ class _PaymentSelectionScreenState
 
     final message = ref.read(paymentSelectionProvider).errorMessage;
     if (message != null && message.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: AppColors.error),
-      );
+      AppToast.showError(context, message);
     }
   }
 
@@ -377,24 +400,86 @@ class _PaymentSelectionScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (method.qrImage != null && method.qrImage!.isNotEmpty) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    _resolveImageUrl(method.qrImage!),
-                    height: 170,
-                    width: 170,
-                    fit: BoxFit.cover,
+                Center(
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.all(12),
+                          child: Image.network(
+                            _resolveImageUrl(method.qrImage!),
+                            height: 250,
+                            width: 250,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () => _downloadQrCode(_resolveImageUrl(method.qrImage!)),
+                        icon: const Icon(Icons.download_rounded, size: 20),
+                        label: const Text('Save QR Code to Gallery'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
               ],
-              if (method.accountName != null && method.accountName!.isNotEmpty)
-                Text('Account: ${method.accountName}'),
-              if (method.accountNumber != null &&
-                  method.accountNumber!.isNotEmpty)
-                Text('Number: ${method.accountNumber}'),
-              if (method.instructions != null &&
-                  method.instructions!.isNotEmpty) ...[
+              if (method.accountName != null && method.accountName!.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Account Name: ${method.accountName}',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.primary),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: method.accountName!));
+                        AppToast.showSuccess(context, 'Account Name copied!');
+                      },
+                      tooltip: 'Copy Account Name',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (method.accountNumber != null && method.accountNumber!.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Account Number: ${method.accountNumber}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.primary),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: method.accountNumber!));
+                        AppToast.showSuccess(context, 'Account Number copied!');
+                      },
+                      tooltip: 'Copy Account Number',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (method.instructions != null && method.instructions!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(method.instructions!),
               ],

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/utils/formatters.dart';
+import 'package:aarambha_app/core/utils/toast_utils.dart';
 import 'package:aarambha_app/core/storage/local_cart_provider.dart';
 import 'package:aarambha_app/core/widgets/empty_state.dart';
 import 'package:aarambha_app/core/widgets/price_display.dart';
@@ -70,9 +71,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         _isValidatingCoupon = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Coupon applied! ${rate.round()}% off')),
-        );
+        AppToast.showSuccess(context, 'Coupon applied! ${rate.round()}% off');
       }
     } catch (e) {
       setState(() {
@@ -82,12 +81,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         _isValidatingCoupon = false;
       }      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Invalid coupon: $_couponError'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppToast.showError(context, 'Invalid coupon: $_couponError');
       }
     }
   }
@@ -408,6 +402,8 @@ class _ServerCartItemTile extends StatelessWidget {
       name: item.productName,
       unitPrice: item.unitPrice,
       subtotal: item.subtotal,
+      basePrice: item.basePrice,
+      baseSubtotal: item.baseSubtotal,
       quantity: item.quantity,
       onQuantityChanged: onQuantityChanged,
       onRemove: onRemove,
@@ -445,6 +441,8 @@ class _CartItemLayout extends StatelessWidget {
   final String name;
   final double unitPrice;
   final double subtotal;
+  final double? basePrice;
+  final double? baseSubtotal;
   final int quantity;
   final ValueChanged<int> onQuantityChanged;
   final VoidCallback onRemove;
@@ -454,6 +452,8 @@ class _CartItemLayout extends StatelessWidget {
     required this.name,
     required this.unitPrice,
     required this.subtotal,
+    this.basePrice,
+    this.baseSubtotal,
     required this.quantity,
     required this.onQuantityChanged,
     required this.onRemove,
@@ -461,6 +461,8 @@ class _CartItemLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasSavings = baseSubtotal != null && baseSubtotal! > subtotal;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Container(
@@ -512,11 +514,17 @@ class _CartItemLayout extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   PriceDisplay(
-                    price: unitPrice,
+                    price: basePrice ?? unitPrice,
+                    discountedPrice: (basePrice != null && basePrice! > unitPrice) ? unitPrice : null,
                     priceStyle: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
+                    ),
+                    discountedPriceStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.priceDiscounted,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -540,6 +548,20 @@ class _CartItemLayout extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (hasSavings) ...[
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'Saved ${Formatters.formatCurrency(baseSubtotal! - subtotal)}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

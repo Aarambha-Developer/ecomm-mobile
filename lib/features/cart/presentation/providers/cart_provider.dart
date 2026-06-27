@@ -70,6 +70,8 @@ class CartNotifier extends StateNotifier<AsyncValue<Cart>> {
     final updatedItems = current.items.map((item) {
       if (item.id == itemId) {
         final newSubtotal = item.unitPrice * quantity;
+        final newBaseSubtotal = item.basePrice * quantity;
+        final newTotalSavings = newBaseSubtotal - newSubtotal;
         return CartItem(
           id: item.id,
           productId: item.productId,
@@ -78,8 +80,12 @@ class CartNotifier extends StateNotifier<AsyncValue<Cart>> {
           productImage: item.productImage,
           unitPrice: item.unitPrice,
           subtotal: newSubtotal,
+          basePrice: item.basePrice,
+          baseSubtotal: newBaseSubtotal,
+          totalSavings: newTotalSavings,
           quantity: quantity,
           stockQuantity: item.stockQuantity,
+          appliedOffers: item.appliedOffers,
         );
       }
       return item;

@@ -79,5 +79,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to let you select a payment screenshot.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need permission to save the payment QR code to your photo library.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We use this data to analyze app performance, diagnose issues, and improve your overall shopping experience.</string>
 </dict>
 </plist>

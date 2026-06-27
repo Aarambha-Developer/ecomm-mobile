@@ -24,6 +24,32 @@ class ProductImage {
   }
 }
 
+class ApplicableOffer {
+  final String title;
+  final String discountType;
+  final double discountValue;
+
+  const ApplicableOffer({
+    required this.title,
+    required this.discountType,
+    required this.discountValue,
+  });
+
+  factory ApplicableOffer.fromJson(Map<String, dynamic> json) {
+    double parsePrice(dynamic val) {
+      if (val == null) return 0;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? 0;
+    }
+
+    return ApplicableOffer(
+      title: json['title']?.toString() ?? '',
+      discountType: json['discount_type']?.toString() ?? '',
+      discountValue: parsePrice(json['discount_value']),
+    );
+  }
+}
+
 class Product {
   final String id;
   final String name;
@@ -46,6 +72,8 @@ class Product {
   final String? fullDescription;
   final DateTime? createdAt;
   final List<ProductReview> reviews;
+  final double bestOfferPct;
+  final List<ApplicableOffer> applicableOffers;
 
   Product({
     required this.id,
@@ -69,6 +97,8 @@ class Product {
     this.fullDescription,
     this.createdAt,
     this.reviews = const [],
+    this.bestOfferPct = 0,
+    this.applicableOffers = const [],
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -140,6 +170,17 @@ class Product {
       reviews: (json['reviews'] as List<dynamic>?)
               ?.map((e) => e is Map ? ProductReview.fromJson(Map<String, dynamic>.from(e)) : null)
               .whereType<ProductReview>()
+              .toList() ??
+          [],
+      bestOfferPct: (() {
+        final val = json['best_offer_pct'];
+        if (val == null) return 0.0;
+        if (val is num) return val.toDouble();
+        return double.tryParse(val.toString()) ?? 0.0;
+      })(),
+      applicableOffers: (json['applicable_offers'] as List<dynamic>?)
+              ?.map((e) => e is Map ? ApplicableOffer.fromJson(Map<String, dynamic>.from(e)) : null)
+              .whereType<ApplicableOffer>()
               .toList() ??
           [],
     );

@@ -66,6 +66,7 @@ class HeroSlide {
 class Offer {
   final String id;
   final String title;
+  final String slug;
   final String? description;
   final String? image;
   final String? link;
@@ -75,10 +76,14 @@ class Offer {
   final String? discountType;
   final double? discountValue;
   final double? minCartValue;
+  final DateTime? validFrom;
+  final DateTime? validUntil;
+  final int productsCount;
 
   const Offer({
     required this.id,
     required this.title,
+    required this.slug,
     this.description,
     this.image,
     this.link,
@@ -88,6 +93,9 @@ class Offer {
     this.discountType,
     this.discountValue,
     this.minCartValue,
+    this.validFrom,
+    this.validUntil,
+    this.productsCount = 0,
   });
 
   factory Offer.fromJson(Map<String, dynamic> json) {
@@ -100,6 +108,7 @@ class Offer {
     return Offer(
       id: json['id']?.toString() ?? '',
       title: json['title'] as String? ?? '',
+      slug: json['slug'] as String? ?? '',
       description: json['description'] as String?,
       image: json['image'] as String?,
       link: json['link'] as String?,
@@ -109,6 +118,9 @@ class Offer {
       discountType: json['discount_type'] as String?,
       discountValue: parseDouble(json['discount_value']),
       minCartValue: parseDouble(json['min_cart_value']),
+      validFrom: json['valid_from'] != null ? DateTime.tryParse(json['valid_from'].toString()) : null,
+      validUntil: json['valid_until'] != null ? DateTime.tryParse(json['valid_until'].toString()) : null,
+      productsCount: json['products_count'] as int? ?? 0,
     );
   }
 }
