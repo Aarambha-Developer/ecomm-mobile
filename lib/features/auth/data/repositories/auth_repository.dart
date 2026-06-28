@@ -59,6 +59,23 @@ class AuthRepository {
     return AuthUser.fromJson(data);
   }
 
+  Future<AuthUser> appleLogin(String idToken) async {
+    final response = await _remoteSource.appleLogin(idToken);
+    final data = response['data'] as Map<String, dynamic>;
+
+    final accessToken = data['access'] as String?;
+    final refreshToken = data['refresh'] as String?;
+
+    if (accessToken != null) {
+      await _storage.saveAccessToken(accessToken);
+    }
+    if (refreshToken != null) {
+      await _storage.saveRefreshToken(refreshToken);
+    }
+
+    return AuthUser.fromJson(data);
+  }
+
   Future<AuthUser> getProfile() async {
     final response = await _remoteSource.getProfile();
     final data = response['data'] as Map<String, dynamic>;

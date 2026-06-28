@@ -218,12 +218,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       onPressed: isLoading
                           ? null
-                          : () {
-                              AppToast.showInfo(
-                                context,
-                                'Sign in with Apple is simulated in this development environment.',
-                              );
-                            },
+                          : () => ref.read(authProvider.notifier).loginWithApple(),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

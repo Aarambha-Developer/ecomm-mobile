@@ -6,6 +6,7 @@ import '../../../../core/storage/secure_storage.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/auth_user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.read(secureStorageProvider);
@@ -123,6 +124,46 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final localName = await _repository.getLocalName(user.id);
       if (localName != null && localName.isNotEmpty) {
         user = user.copyWith(fullName: localName);
+      }
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> loginWithApple() async {
+    state = state.copyWith(status: AuthStatus.loading, clearError: true);
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw Exception('Apple Sign-In failed: No ID Token found.');
+      }
+      var user = await _repository.appleLogin(idToken);
+      final givenName = credential.givenName;
+      final familyName = credential.familyName;
+      final fullName = [givenName, familyName]
+          .where((e) => e != null && e.isNotEmpty)
+          .join(' ');
+      if (fullName.isNotEmpty) {
+        await _repository.saveLocalName(user.id, fullName);
+        user = user.copyWith(fullName: fullName);
+      } else {
+        final localName = await _repository.getLocalName(user.id);
+        if (localName != null && localName.isNotEmpty) {
+          user = user.copyWith(fullName: localName);
+        }
       }
       state = state.copyWith(
         status: AuthStatus.authenticated,

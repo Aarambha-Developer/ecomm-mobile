@@ -96,7 +96,14 @@ class PaymentApiService {
   }) async {
     if (screenshotPath != null && screenshotPath.isNotEmpty) {
       final formData = FormData.fromMap({
-        'shipping_address': request.shippingAddress,
+        'shipping_full_name': request.shippingFullName,
+        'shipping_phone': request.shippingPhone,
+        'shipping_email': request.shippingEmail,
+        'shipping_province': request.shippingProvince,
+        'shipping_district': request.shippingDistrict,
+        'shipping_municipality': request.shippingMunicipality,
+        'shipping_street': request.shippingStreet,
+        'shipping_zip_code': request.shippingZipCode,
         'payment_method': paymentMethodId,
         if (request.notes.isNotEmpty) 'notes': request.notes,
         if (couponCode != null && couponCode.trim().isNotEmpty)

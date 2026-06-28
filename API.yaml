@@ -11,6 +11,251 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/addresses/:
+    get:
+      operationId: addresses_list
+      description: Base mixin for ViewSets with common functionality.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - addresses
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserAddressList'
+          description: ''
+    post:
+      operationId: addresses_create
+      description: Base mixin for ViewSets with common functionality.
+      tags:
+      - addresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAddressRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserAddressRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserAddressRequest'
+        required: true
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAddress'
+          description: ''
+  /api/v1/addresses/{id}/:
+    get:
+      operationId: addresses_retrieve
+      description: Base mixin for ViewSets with common functionality.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - addresses
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAddress'
+          description: ''
+    put:
+      operationId: addresses_update
+      description: Base mixin for ViewSets with common functionality.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - addresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAddressRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserAddressRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserAddressRequest'
+        required: true
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAddress'
+          description: ''
+    patch:
+      operationId: addresses_partial_update
+      description: Base mixin for ViewSets with common functionality.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - addresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserAddressRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserAddressRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserAddressRequest'
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAddress'
+          description: ''
+    delete:
+      operationId: addresses_destroy
+      description: Base mixin for ViewSets with common functionality.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - addresses
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/admin/addresses/:
+    get:
+      operationId: admin_addresses_list
+      description: Base ViewSet for read-only operations.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - admin
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserAddressList'
+          description: ''
+  /api/v1/admin/addresses/{id}/:
+    get:
+      operationId: admin_addresses_retrieve
+      description: Base ViewSet for read-only operations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user address.
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAddress'
+          description: ''
   /api/v1/admin/brands/:
     get:
       operationId: admin_brands_list
@@ -658,6 +903,307 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/admin/delivery-areas/:
+    get:
+      operationId: admin_delivery_areas_list
+      parameters:
+      - in: query
+        name: district
+        schema:
+          type: string
+      - in: query
+        name: is_available
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: province
+        schema:
+          type: string
+      tags:
+      - admin
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeliveryAreaList'
+          description: ''
+    post:
+      operationId: admin_delivery_areas_create
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryAreaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryAreaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryAreaRequest'
+        required: true
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryArea'
+          description: ''
+  /api/v1/admin/delivery-areas/{id}/:
+    get:
+      operationId: admin_delivery_areas_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this delivery area.
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryArea'
+          description: ''
+    put:
+      operationId: admin_delivery_areas_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this delivery area.
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryAreaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryAreaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryAreaRequest'
+        required: true
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryArea'
+          description: ''
+    patch:
+      operationId: admin_delivery_areas_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this delivery area.
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryAreaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryAreaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryAreaRequest'
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryArea'
+          description: ''
+    delete:
+      operationId: admin_delivery_areas_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this delivery area.
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/admin/delivery-config/:
+    get:
+      operationId: admin_delivery_config_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - admin
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeliveryConfigList'
+          description: ''
+  /api/v1/admin/delivery-config/{id}/:
+    get:
+      operationId: admin_delivery_config_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this delivery config.
+        required: true
+      tags:
+      - admin
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryConfig'
+          description: ''
+    put:
+      operationId: admin_delivery_config_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this delivery config.
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryConfigRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryConfigRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryConfigRequest'
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryConfig'
+          description: ''
+    patch:
+      operationId: admin_delivery_config_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this delivery config.
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryConfigRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryConfigRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryConfigRequest'
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryConfig'
+          description: ''
   /api/v1/admin/hero/:
     get:
       operationId: admin_hero_list
@@ -1251,7 +1797,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/OrderDetailRequest'
-        required: true
       security:
       - cookieJWT: []
       - jwtAuth: []
@@ -1310,7 +1855,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/OrderDetailRequest'
-        required: true
       security:
       - cookieJWT: []
       - jwtAuth: []
@@ -2991,6 +3535,114 @@ paths:
               schema:
                 $ref: '#/components/schemas/CouponValidate'
           description: ''
+  /api/v1/delivery-areas/:
+    get:
+      operationId: delivery_areas_list
+      description: Base mixin for ViewSets with common functionality.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - delivery-areas
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeliveryArea'
+          description: ''
+  /api/v1/delivery-areas/{id}/:
+    get:
+      operationId: delivery_areas_retrieve
+      description: Base mixin for ViewSets with common functionality.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this delivery area.
+        required: true
+      tags:
+      - delivery-areas
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryArea'
+          description: ''
+  /api/v1/delivery-areas/districts/:
+    get:
+      operationId: delivery_areas_districts_retrieve
+      description: Base mixin for ViewSets with common functionality.
+      tags:
+      - delivery-areas
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryArea'
+          description: ''
+  /api/v1/delivery-areas/municipalities/:
+    get:
+      operationId: delivery_areas_municipalities_retrieve
+      description: Base mixin for ViewSets with common functionality.
+      tags:
+      - delivery-areas
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryArea'
+          description: ''
+  /api/v1/delivery-areas/provinces/:
+    get:
+      operationId: delivery_areas_provinces_retrieve
+      description: Base mixin for ViewSets with common functionality.
+      tags:
+      - delivery-areas
+      security:
+      - cookieJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryArea'
+          description: ''
   /api/v1/hero/:
     get:
       operationId: hero_retrieve
@@ -3206,7 +3858,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OrderDetailRequest'
-        required: true
       security:
       - cookieJWT: []
       - jwtAuth: []
@@ -4222,6 +4873,100 @@ components:
           maxLength: 50
       required:
       - code
+    DeliveryArea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        province:
+          type: string
+          maxLength: 100
+        district:
+          type: string
+          maxLength: 100
+        municipality:
+          type: string
+          maxLength: 100
+        delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        is_available:
+          type: boolean
+        estimated_days:
+          type: string
+          maxLength: 50
+      required:
+      - district
+      - id
+      - municipality
+      - province
+    DeliveryAreaRequest:
+      type: object
+      properties:
+        province:
+          type: string
+          minLength: 1
+          maxLength: 100
+        district:
+          type: string
+          minLength: 1
+          maxLength: 100
+        municipality:
+          type: string
+          minLength: 1
+          maxLength: 100
+        delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        is_available:
+          type: boolean
+        estimated_days:
+          type: string
+          maxLength: 50
+      required:
+      - district
+      - municipality
+      - province
+    DeliveryConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        default_delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        default_estimated_days:
+          type: string
+          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - updated_at
+    DeliveryConfigRequest:
+      type: object
+      properties:
+        default_delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        default_estimated_days:
+          type: string
+          maxLength: 50
     DiscountTypeEnum:
       enum:
       - percentage
@@ -4785,6 +5530,10 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
         total_price:
           type: string
           format: decimal
@@ -4794,8 +5543,30 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
-        shipping_address:
+        shipping_full_name:
           type: string
+          maxLength: 255
+        shipping_phone:
+          type: string
+          maxLength: 20
+        shipping_email:
+          type: string
+          format: email
+          maxLength: 254
+        shipping_province:
+          type: string
+          maxLength: 100
+        shipping_district:
+          type: string
+          maxLength: 100
+        shipping_municipality:
+          type: string
+          maxLength: 100
+        shipping_street:
+          type: string
+        shipping_zip_code:
+          type: string
+          maxLength: 20
         notes:
           type: string
         items:
@@ -4821,7 +5592,6 @@ components:
       - id
       - items
       - payment_proof
-      - shipping_address
       - updated_at
     OrderDetailRequest:
       type: object
@@ -4838,6 +5608,10 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
         total_price:
           type: string
           format: decimal
@@ -4847,13 +5621,32 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
-        shipping_address:
+        shipping_full_name:
           type: string
-          minLength: 1
+          maxLength: 255
+        shipping_phone:
+          type: string
+          maxLength: 20
+        shipping_email:
+          type: string
+          format: email
+          maxLength: 254
+        shipping_province:
+          type: string
+          maxLength: 100
+        shipping_district:
+          type: string
+          maxLength: 100
+        shipping_municipality:
+          type: string
+          maxLength: 100
+        shipping_street:
+          type: string
+        shipping_zip_code:
+          type: string
+          maxLength: 20
         notes:
           type: string
-      required:
-      - shipping_address
     OrderItem:
       type: object
       properties:
@@ -4926,6 +5719,10 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
         total_price:
           type: string
           format: decimal
@@ -4935,6 +5732,15 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
+        shipping_province:
+          type: string
+          maxLength: 100
+        shipping_district:
+          type: string
+          maxLength: 100
+        shipping_municipality:
+          type: string
+          maxLength: 100
         created_at:
           type: string
           format: date-time
@@ -5127,6 +5933,66 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Coupon'
+        pagination:
+          type: object
+          properties:
+            count:
+              type: integer
+              example: 100
+            next:
+              type: string
+              nullable: true
+              example: http://api/posts/?page=2
+            previous:
+              type: string
+              nullable: true
+              example: null
+    PaginatedDeliveryAreaList:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Success
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryArea'
+        pagination:
+          type: object
+          properties:
+            count:
+              type: integer
+              example: 100
+            next:
+              type: string
+              nullable: true
+              example: http://api/posts/?page=2
+            previous:
+              type: string
+              nullable: true
+              example: null
+    PaginatedDeliveryConfigList:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Success
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryConfig'
         pagination:
           type: object
           properties:
@@ -5441,6 +6307,36 @@ components:
               type: string
               nullable: true
               example: null
+    PaginatedUserAddressList:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Success
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserAddress'
+        pagination:
+          type: object
+          properties:
+            count:
+              type: integer
+              example: 100
+            next:
+              type: string
+              nullable: true
+              example: http://api/posts/?page=2
+            previous:
+              type: string
+              nullable: true
+              example: null
     PasswordResetConfirm:
       type: object
       properties:
@@ -5573,6 +6469,40 @@ components:
           type: string
           format: uuid
           nullable: true
+    PatchedDeliveryAreaRequest:
+      type: object
+      properties:
+        province:
+          type: string
+          minLength: 1
+          maxLength: 100
+        district:
+          type: string
+          minLength: 1
+          maxLength: 100
+        municipality:
+          type: string
+          minLength: 1
+          maxLength: 100
+        delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        is_available:
+          type: boolean
+        estimated_days:
+          type: string
+          maxLength: 50
+    PatchedDeliveryConfigRequest:
+      type: object
+      properties:
+        default_delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        default_estimated_days:
+          type: string
+          maxLength: 50
     PatchedHeroSectionAdminRequest:
       type: object
       properties:
@@ -5696,6 +6626,10 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
         total_price:
           type: string
           format: decimal
@@ -5705,9 +6639,30 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
-        shipping_address:
+        shipping_full_name:
           type: string
-          minLength: 1
+          maxLength: 255
+        shipping_phone:
+          type: string
+          maxLength: 20
+        shipping_email:
+          type: string
+          format: email
+          maxLength: 254
+        shipping_province:
+          type: string
+          maxLength: 100
+        shipping_district:
+          type: string
+          maxLength: 100
+        shipping_municipality:
+          type: string
+          maxLength: 100
+        shipping_street:
+          type: string
+        shipping_zip_code:
+          type: string
+          maxLength: 20
         notes:
           type: string
     PatchedPaymentMethodRequest:
@@ -5792,6 +6747,40 @@ components:
           items:
             $ref: '#/components/schemas/ProductImageRequest'
           writeOnly: true
+    PatchedUserAddressRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        province:
+          type: string
+          minLength: 1
+          maxLength: 100
+        district:
+          type: string
+          minLength: 1
+          maxLength: 100
+        municipality:
+          type: string
+          minLength: 1
+          maxLength: 100
+        street:
+          type: string
+          minLength: 1
+        zip_code:
+          type: string
+          maxLength: 20
+        label:
+          type: string
+          maxLength: 50
+        is_default:
+          type: boolean
     PaymentMethod:
       type: object
       properties:
@@ -6504,6 +7493,97 @@ components:
         * `cod` - Cash On Delivery
         * `gateway_esewa` - Esewa (gateway)
         * `gateway_khalti` - Khalti (gateway)
+    UserAddress:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 20
+        province:
+          type: string
+          maxLength: 100
+        district:
+          type: string
+          maxLength: 100
+        municipality:
+          type: string
+          maxLength: 100
+        street:
+          type: string
+        zip_code:
+          type: string
+          maxLength: 20
+        label:
+          type: string
+          maxLength: 50
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - district
+      - full_name
+      - id
+      - municipality
+      - phone
+      - province
+      - street
+      - updated_at
+    UserAddressRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        province:
+          type: string
+          minLength: 1
+          maxLength: 100
+        district:
+          type: string
+          minLength: 1
+          maxLength: 100
+        municipality:
+          type: string
+          minLength: 1
+          maxLength: 100
+        street:
+          type: string
+          minLength: 1
+        zip_code:
+          type: string
+          maxLength: 20
+        label:
+          type: string
+          maxLength: 50
+        is_default:
+          type: boolean
+      required:
+      - district
+      - full_name
+      - municipality
+      - phone
+      - province
+      - street
     Wishlist:
       type: object
       properties:

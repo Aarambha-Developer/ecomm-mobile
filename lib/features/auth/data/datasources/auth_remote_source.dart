@@ -39,6 +39,13 @@ class AuthRemoteSource {
     );
   }
 
+  Future<Map<String, dynamic>> appleLogin(String idToken) async {
+    return await _client.post(
+      ApiConstants.appleLogin,
+      data: {'id_token': idToken},
+    );
+  }
+
   Future<Map<String, dynamic>> getProfile() async {
     return await _client.get(ApiConstants.me);
   }

@@ -13,6 +13,7 @@ class ApiConstants {
   static const String refreshToken = '/auth/refresh/';
   static const String me = '/auth/me/';
   static const String googleLogin = '/auth/google/';
+  static const String appleLogin = '/auth/apple/';
   static const String resendVerification = '/auth/resend-verification/';
   static const String requestSmsOtp = '/auth/request-sms-otp/';
   static const String verifyEmail = '/auth/verify-email/confirm/';

@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:gal/gal.dart';
 
+import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/utils/formatters.dart';
 import 'package:aarambha_app/core/utils/toast_utils.dart';
@@ -28,9 +29,50 @@ class PaymentSelectionScreen extends ConsumerStatefulWidget {
 
 class _PaymentSelectionScreenState
     extends ConsumerState<PaymentSelectionScreen> {
-  final _addressController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _provinceController = TextEditingController();
+  final _districtController = TextEditingController();
+  final _municipalityController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _zipCodeController = TextEditingController();
   final _notesController = TextEditingController();
   String? _appliedCouponCode;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prepopulateUserData();
+    });
+  }
+
+  void _prepopulateUserData() {
+    final user = ref.read(authProvider).user;
+    if (user != null) {
+      if (user.fullName != null && user.fullName!.isNotEmpty) {
+        _fullNameController.text = user.fullName!;
+      }
+      if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) {
+        _phoneController.text = user.phoneNumber!;
+      }
+      if (user.email.isNotEmpty) {
+        _emailController.text = user.email;
+      }
+    }
+  }
+
+  bool _validateFields() {
+    if (_fullNameController.text.trim().isEmpty) return false;
+    if (_phoneController.text.trim().isEmpty) return false;
+    if (_emailController.text.trim().isEmpty) return false;
+    if (_provinceController.text.trim().isEmpty) return false;
+    if (_districtController.text.trim().isEmpty) return false;
+    if (_municipalityController.text.trim().isEmpty) return false;
+    if (_streetController.text.trim().isEmpty) return false;
+    return true;
+  }
 
   String _resolveImageUrl(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -69,7 +111,14 @@ class _PaymentSelectionScreenState
 
   @override
   void dispose() {
-    _addressController.dispose();
+    _fullNameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _provinceController.dispose();
+    _districtController.dispose();
+    _municipalityController.dispose();
+    _streetController.dispose();
+    _zipCodeController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -89,16 +138,37 @@ class _PaymentSelectionScreenState
   }
 
   Future<void> _completeCheckout() async {
-    final address = _addressController.text.trim();
-    if (address.length < 10) {
-      AppToast.showError(context, 'Please enter a valid shipping address');
+    final fullName = _fullNameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final email = _emailController.text.trim();
+    final province = _provinceController.text.trim();
+    final district = _districtController.text.trim();
+    final municipality = _municipalityController.text.trim();
+    final street = _streetController.text.trim();
+    final zipCode = _zipCodeController.text.trim();
+
+    if (fullName.isEmpty ||
+        phone.isEmpty ||
+        email.isEmpty ||
+        province.isEmpty ||
+        district.isEmpty ||
+        municipality.isEmpty ||
+        street.isEmpty) {
+      AppToast.showError(context, 'Please fill in all required shipping fields');
       return;
     }
 
     final notifier = ref.read(paymentSelectionProvider.notifier);
     final orderId = await notifier.completeCheckout(
       orderRequest: OrderRequest(
-        shippingAddress: address,
+        shippingFullName: fullName,
+        shippingPhone: phone,
+        shippingEmail: email,
+        shippingProvince: province,
+        shippingDistrict: district,
+        shippingMunicipality: municipality,
+        shippingStreet: street,
+        shippingZipCode: zipCode,
         notes: _notesController.text.trim(),
       ),
       couponCode: _appliedCouponCode,
@@ -248,26 +318,92 @@ class _PaymentSelectionScreenState
                   const SizedBox(height: 20),
                 ],
                 Text(
-                  'Shipping Address',
+                  'Shipping Details',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 10),
-                TextField(
-                  controller: _addressController,
-                  maxLines: 3,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    hintText: 'Street, city, state, zip code, country...',
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Minimum 10 characters required',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: _addressController.text.trim().length >= 10
-                        ? AppColors.success
-                        : AppColors.textHint,
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _fullNameController,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'Recipient Full Name *',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'Phone Number *',
+                          prefixIcon: Icon(Icons.phone_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'Email Address *',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _provinceController,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'Province *',
+                          prefixIcon: Icon(Icons.map_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _districtController,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'District *',
+                          prefixIcon: Icon(Icons.location_city_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _municipalityController,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'Municipality *',
+                          prefixIcon: Icon(Icons.location_on_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _streetController,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'Street Address *',
+                          prefixIcon: Icon(Icons.home_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _zipCodeController,
+                        decoration: const InputDecoration(
+                          labelText: 'Zip Code (optional)',
+                          prefixIcon: Icon(Icons.pin_outlined),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -357,7 +493,7 @@ class _PaymentSelectionScreenState
                 top: false,
                 child: ElevatedButton(
                   onPressed: state.isSubmitting ||
-                          _addressController.text.trim().length < 10 ||
+                          !_validateFields() ||
                           !state.canCheckout
                       ? null
                       : _completeCheckout,
