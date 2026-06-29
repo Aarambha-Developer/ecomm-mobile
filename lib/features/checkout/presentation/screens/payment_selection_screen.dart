@@ -16,6 +16,9 @@ import 'package:aarambha_app/core/utils/toast_utils.dart';
 import 'package:aarambha_app/features/cart/presentation/providers/cart_provider.dart';
 import 'package:aarambha_app/features/checkout/data/models/order_request.dart';
 import 'package:aarambha_app/features/checkout/data/models/payment_method.dart';
+import 'package:aarambha_app/features/addresses/presentation/providers/addresses_provider.dart';
+import 'package:aarambha_app/features/addresses/data/models/address.dart';
+import 'package:aarambha_app/features/checkout/data/models/delivery_area.dart';
 import 'package:aarambha_app/features/checkout/presentation/providers/payment_selection_provider.dart';
 import 'package:aarambha_app/features/checkout/presentation/screens/order_success_screen.dart';
 
@@ -39,6 +42,120 @@ class _PaymentSelectionScreenState
   final _zipCodeController = TextEditingController();
   final _notesController = TextEditingController();
   String? _appliedCouponCode;
+
+  List<DeliveryArea> _allDeliveryAreas = [];
+  DeliveryArea? _matchedArea;
+  Address? _selectedSavedAddress;
+  String? _selectedProvince;
+  String? _selectedDistrict;
+  String? _selectedMunicipality;
+  bool _useSavedAddress = true;
+
+  List<String> get _provinces {
+    return _allDeliveryAreas.map((e) => e.province).toSet().toList()..sort();
+  }
+
+  List<String> get _districts {
+    if (_selectedProvince == null) return [];
+    return _allDeliveryAreas
+        .where((e) => e.province == _selectedProvince)
+        .map((e) => e.district)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  List<String> get _municipalities {
+    if (_selectedProvince == null || _selectedDistrict == null) return [];
+    return _allDeliveryAreas
+        .where((e) =>
+            e.province == _selectedProvince && e.district == _selectedDistrict)
+        .map((e) => e.municipality)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  void _recalculateDeliveryCharge() {
+    if (_allDeliveryAreas.isEmpty) return;
+
+    final province = _provinceController.text.trim().toLowerCase();
+    final district = _districtController.text.trim().toLowerCase();
+    final municipality = _municipalityController.text.trim().toLowerCase();
+
+    DeliveryArea? match;
+    for (final area in _allDeliveryAreas) {
+      if (area.province.toLowerCase() == province &&
+          area.district.toLowerCase() == district &&
+          area.municipality.toLowerCase() == municipality) {
+        match = area;
+        break;
+      }
+    }
+
+    if (match == null) {
+      for (final area in _allDeliveryAreas) {
+        if (area.district.toLowerCase() == district &&
+            area.municipality.toLowerCase() == municipality) {
+          match = area;
+          break;
+        }
+      }
+    }
+
+    if (match == null) {
+      for (final area in _allDeliveryAreas) {
+        if (area.municipality.toLowerCase() == municipality) {
+          match = area;
+          break;
+        }
+      }
+    }
+
+    setState(() {
+      _matchedArea = match;
+    });
+  }
+
+  void _applySavedAddress(Address address) {
+    _fullNameController.text = address.fullName;
+    _phoneController.text = address.phone;
+    _provinceController.text = address.province;
+    _districtController.text = address.district;
+    _municipalityController.text = address.municipality;
+    _streetController.text = address.street;
+    _zipCodeController.text = address.zipCode ?? '';
+
+    final matchedProvince = _provinces
+        .where((p) => p.toLowerCase() == address.province.toLowerCase())
+        .firstOrNull;
+    if (matchedProvince != null) {
+      _selectedProvince = matchedProvince;
+      final matchedDistrict = _districts
+          .where((d) => d.toLowerCase() == address.district.toLowerCase())
+          .firstOrNull;
+      if (matchedDistrict != null) {
+        _selectedDistrict = matchedDistrict;
+        final matchedMunicipality = _municipalities
+            .where((m) => m.toLowerCase() == address.municipality.toLowerCase())
+            .firstOrNull;
+        if (matchedMunicipality != null) {
+          _selectedMunicipality = matchedMunicipality;
+        } else {
+          _selectedMunicipality = null;
+        }
+      } else {
+        _selectedDistrict = null;
+        _selectedMunicipality = null;
+      }
+    } else {
+      _selectedProvince = null;
+      _selectedDistrict = null;
+      _selectedMunicipality = null;
+    }
+
+    _recalculateDeliveryCharge();
+  }
 
   @override
   void initState() {
@@ -221,7 +338,35 @@ class _PaymentSelectionScreenState
     final subtotal = cart?.totalAmount ?? 0;
     final discountRate = state.couponDiscountRate;
     final discount = discountRate != null ? subtotal * (discountRate / 100) : 0.0;
-    final total = subtotal - discount;
+
+    final deliveryAreasAsync = ref.watch(deliveryAreasProvider);
+    final addressesAsync = ref.watch(addressesProvider);
+
+    deliveryAreasAsync.whenData((areas) {
+      if (_allDeliveryAreas.isEmpty && areas.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            _allDeliveryAreas = areas;
+            _recalculateDeliveryCharge();
+          });
+        });
+      }
+    });
+
+    addressesAsync.whenData((addresses) {
+      if (_useSavedAddress && _selectedSavedAddress == null && addresses.isNotEmpty) {
+        final defaultAddress = addresses.firstWhere((e) => e.isDefault, orElse: () => addresses.first);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            _selectedSavedAddress = defaultAddress;
+            _applySavedAddress(defaultAddress);
+          });
+        });
+      }
+    });
+
+    final deliveryCharge = _matchedArea?.deliveryCharge ?? 0.0;
+    final total = subtotal - discount + deliveryCharge;
 
     return Scaffold(
       appBar: AppBar(
@@ -295,6 +440,46 @@ class _PaymentSelectionScreenState
                           ),
                         ],
                         const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Delivery Charge'),
+                            Text(
+                              deliveryCharge > 0
+                                  ? Formatters.formatCurrencyPlain(deliveryCharge)
+                                  : 'Free',
+                              style: TextStyle(
+                                color: deliveryCharge > 0
+                                    ? AppColors.textSecondary
+                                    : AppColors.success,
+                                fontWeight: deliveryCharge > 0
+                                    ? FontWeight.normal
+                                    : FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_matchedArea != null && _matchedArea!.estimatedDays.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Estimated Delivery',
+                                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                              ),
+                              Text(
+                                _matchedArea!.estimatedDays,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 4),
                         const Divider(),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -317,11 +502,85 @@ class _PaymentSelectionScreenState
                   ),
                   const SizedBox(height: 20),
                 ],
-                Text(
-                  'Shipping Details',
-                  style: Theme.of(context).textTheme.titleMedium,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Shipping Details',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    if (addressesAsync.valueOrNull != null && addressesAsync.valueOrNull!.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _useSavedAddress = !_useSavedAddress;
+                            if (!_useSavedAddress) {
+                              _selectedSavedAddress = null;
+                              _fullNameController.clear();
+                              _phoneController.clear();
+                              _provinceController.clear();
+                              _districtController.clear();
+                              _municipalityController.clear();
+                              _streetController.clear();
+                              _zipCodeController.clear();
+                              _selectedProvince = null;
+                              _selectedDistrict = null;
+                              _selectedMunicipality = null;
+                              _recalculateDeliveryCharge();
+                            } else {
+                              final defaultAddress = addressesAsync.valueOrNull!.firstWhere(
+                                (e) => e.isDefault,
+                                orElse: () => addressesAsync.valueOrNull!.first,
+                              );
+                              _selectedSavedAddress = defaultAddress;
+                              _applySavedAddress(defaultAddress);
+                            }
+                          });
+                        },
+                        icon: Icon(_useSavedAddress ? Icons.edit_note : Icons.playlist_add_check),
+                        label: Text(_useSavedAddress ? 'New Address' : 'Saved Addresses'),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 10),
+                if (_useSavedAddress &&
+                    addressesAsync.valueOrNull != null &&
+                    addressesAsync.valueOrNull!.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<Address>(
+                        isExpanded: true,
+                        value: _selectedSavedAddress,
+                        hint: const Text('Select shipping address'),
+                        items: addressesAsync.valueOrNull!.map((address) {
+                          return DropdownMenuItem<Address>(
+                            value: address,
+                            child: Text(
+                              '${address.label}: ${address.fullName}, ${address.displayText}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (address) {
+                          if (address != null) {
+                            setState(() {
+                              _selectedSavedAddress = address;
+                              _applySavedAddress(address);
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -334,6 +593,7 @@ class _PaymentSelectionScreenState
                       TextField(
                         controller: _fullNameController,
                         onChanged: (_) => setState(() {}),
+                        readOnly: _useSavedAddress && _selectedSavedAddress != null,
                         decoration: const InputDecoration(
                           labelText: 'Recipient Full Name *',
                           prefixIcon: Icon(Icons.person_outline),
@@ -344,6 +604,7 @@ class _PaymentSelectionScreenState
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         onChanged: (_) => setState(() {}),
+                        readOnly: _useSavedAddress && _selectedSavedAddress != null,
                         decoration: const InputDecoration(
                           labelText: 'Phone Number *',
                           prefixIcon: Icon(Icons.phone_outlined),
@@ -354,42 +615,181 @@ class _PaymentSelectionScreenState
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         onChanged: (_) => setState(() {}),
+                        readOnly: _useSavedAddress && _selectedSavedAddress != null,
                         decoration: const InputDecoration(
                           labelText: 'Email Address *',
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
                       ),
                       const SizedBox(height: 12),
-                      TextField(
-                        controller: _provinceController,
-                        onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                          labelText: 'Province *',
-                          prefixIcon: Icon(Icons.map_outlined),
+                      if (_useSavedAddress && _selectedSavedAddress != null) ...[
+                        TextField(
+                          controller: _provinceController,
+                          readOnly: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Province',
+                            prefixIcon: Icon(Icons.map_outlined),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _districtController,
-                        onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                          labelText: 'District *',
-                          prefixIcon: Icon(Icons.location_city_outlined),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _districtController,
+                          readOnly: true,
+                          decoration: const InputDecoration(
+                            labelText: 'District',
+                            prefixIcon: Icon(Icons.location_city_outlined),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _municipalityController,
-                        onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                          labelText: 'Municipality *',
-                          prefixIcon: Icon(Icons.location_on_outlined),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _municipalityController,
+                          readOnly: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Municipality',
+                            prefixIcon: Icon(Icons.location_on_outlined),
+                          ),
                         ),
-                      ),
+                      ] else ...[
+                        if (_allDeliveryAreas.isNotEmpty) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: _selectedProvince,
+                                hint: const Text('Select Province *'),
+                                items: _provinces.map((p) {
+                                  return DropdownMenuItem<String>(
+                                    value: p,
+                                    child: Text(p),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedProvince = value;
+                                    _selectedDistrict = null;
+                                    _selectedMunicipality = null;
+                                    _provinceController.text = value ?? '';
+                                    _districtController.clear();
+                                    _municipalityController.clear();
+                                    _recalculateDeliveryCharge();
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: _selectedDistrict,
+                                hint: const Text('Select District *'),
+                                items: _districts.map((d) {
+                                  return DropdownMenuItem<String>(
+                                    value: d,
+                                    child: Text(d),
+                                  );
+                                }).toList(),
+                                onChanged: _selectedProvince == null
+                                    ? null
+                                    : (value) {
+                                        setState(() {
+                                          _selectedDistrict = value;
+                                          _selectedMunicipality = null;
+                                          _districtController.text = value ?? '';
+                                          _municipalityController.clear();
+                                          _recalculateDeliveryCharge();
+                                        });
+                                      },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: _selectedMunicipality,
+                                hint: const Text('Select Municipality *'),
+                                items: _municipalities.map((m) {
+                                  return DropdownMenuItem<String>(
+                                    value: m,
+                                    child: Text(m),
+                                  );
+                                }).toList(),
+                                onChanged: _selectedDistrict == null
+                                    ? null
+                                    : (value) {
+                                        setState(() {
+                                          _selectedMunicipality = value;
+                                          _municipalityController.text = value ?? '';
+                                          _recalculateDeliveryCharge();
+                                        });
+                                      },
+                              ),
+                            ),
+                          ),
+                        ] else ...[
+                          TextField(
+                            controller: _provinceController,
+                            onChanged: (_) {
+                              setState(() {});
+                              _recalculateDeliveryCharge();
+                            },
+                            decoration: const InputDecoration(
+                              labelText: 'Province *',
+                              prefixIcon: Icon(Icons.map_outlined),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _districtController,
+                            onChanged: (_) {
+                              setState(() {});
+                              _recalculateDeliveryCharge();
+                            },
+                            decoration: const InputDecoration(
+                              labelText: 'District *',
+                              prefixIcon: Icon(Icons.location_city_outlined),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _municipalityController,
+                            onChanged: (_) {
+                              setState(() {});
+                              _recalculateDeliveryCharge();
+                            },
+                            decoration: const InputDecoration(
+                              labelText: 'Municipality *',
+                              prefixIcon: Icon(Icons.location_on_outlined),
+                            ),
+                          ),
+                        ],
+                      ],
                       const SizedBox(height: 12),
                       TextField(
                         controller: _streetController,
                         onChanged: (_) => setState(() {}),
+                        readOnly: _useSavedAddress && _selectedSavedAddress != null,
                         decoration: const InputDecoration(
                           labelText: 'Street Address *',
                           prefixIcon: Icon(Icons.home_outlined),
@@ -398,6 +798,7 @@ class _PaymentSelectionScreenState
                       const SizedBox(height: 12),
                       TextField(
                         controller: _zipCodeController,
+                        readOnly: _useSavedAddress && _selectedSavedAddress != null,
                         decoration: const InputDecoration(
                           labelText: 'Zip Code (optional)',
                           prefixIcon: Icon(Icons.pin_outlined),
@@ -406,6 +807,31 @@ class _PaymentSelectionScreenState
                     ],
                   ),
                 ),
+                if (_fullNameController.text.trim().isNotEmpty &&
+                    _municipalityController.text.trim().isNotEmpty &&
+                    _matchedArea == null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.error),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.error_outline, color: AppColors.error),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Warning: Shipping to this area is currently not configured or unavailable.',
+                            style: TextStyle(color: AppColors.error, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 TextField(
                   controller: _notesController,

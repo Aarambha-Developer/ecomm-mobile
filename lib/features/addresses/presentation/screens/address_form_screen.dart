@@ -16,12 +16,13 @@ class AddressFormScreen extends ConsumerStatefulWidget {
 class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _labelCtrl;
-  late TextEditingController _addressCtrl;
-  late TextEditingController _cityCtrl;
-  late TextEditingController _stateCtrl;
-  late TextEditingController _zipCtrl;
-  late TextEditingController _countryCtrl;
+  late TextEditingController _fullNameCtrl;
   late TextEditingController _phoneCtrl;
+  late TextEditingController _provinceCtrl;
+  late TextEditingController _districtCtrl;
+  late TextEditingController _municipalityCtrl;
+  late TextEditingController _streetCtrl;
+  late TextEditingController _zipCtrl;
   bool _isDefault = false;
   bool _isSaving = false;
 
@@ -32,24 +33,26 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
     super.initState();
     final a = widget.address;
     _labelCtrl = TextEditingController(text: a?.label ?? '');
-    _addressCtrl = TextEditingController(text: a?.fullAddress ?? '');
-    _cityCtrl = TextEditingController(text: a?.city ?? '');
-    _stateCtrl = TextEditingController(text: a?.state ?? '');
+    _fullNameCtrl = TextEditingController(text: a?.fullName ?? '');
+    _phoneCtrl = TextEditingController(text: a?.phone ?? '');
+    _provinceCtrl = TextEditingController(text: a?.province ?? '');
+    _districtCtrl = TextEditingController(text: a?.district ?? '');
+    _municipalityCtrl = TextEditingController(text: a?.municipality ?? '');
+    _streetCtrl = TextEditingController(text: a?.street ?? '');
     _zipCtrl = TextEditingController(text: a?.zipCode ?? '');
-    _countryCtrl = TextEditingController(text: a?.country ?? '');
-    _phoneCtrl = TextEditingController(text: a?.phoneNumber ?? '');
     _isDefault = a?.isDefault ?? false;
   }
 
   @override
   void dispose() {
     _labelCtrl.dispose();
-    _addressCtrl.dispose();
-    _cityCtrl.dispose();
-    _stateCtrl.dispose();
-    _zipCtrl.dispose();
-    _countryCtrl.dispose();
+    _fullNameCtrl.dispose();
     _phoneCtrl.dispose();
+    _provinceCtrl.dispose();
+    _districtCtrl.dispose();
+    _municipalityCtrl.dispose();
+    _streetCtrl.dispose();
+    _zipCtrl.dispose();
     super.dispose();
   }
 
@@ -61,14 +64,13 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
       final address = Address(
         id: widget.address?.id ?? '',
         label: _labelCtrl.text.trim(),
-        fullAddress: _addressCtrl.text.trim(),
-        city: _cityCtrl.text.trim().isEmpty ? null : _cityCtrl.text.trim(),
-        state: _stateCtrl.text.trim().isEmpty ? null : _stateCtrl.text.trim(),
+        fullName: _fullNameCtrl.text.trim(),
+        phone: _phoneCtrl.text.trim(),
+        province: _provinceCtrl.text.trim(),
+        district: _districtCtrl.text.trim(),
+        municipality: _municipalityCtrl.text.trim(),
+        street: _streetCtrl.text.trim(),
         zipCode: _zipCtrl.text.trim().isEmpty ? null : _zipCtrl.text.trim(),
-        country:
-            _countryCtrl.text.trim().isEmpty ? null : _countryCtrl.text.trim(),
-        phoneNumber:
-            _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
         isDefault: _isDefault,
       );
 
@@ -125,12 +127,22 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _addressCtrl,
+                controller: _fullNameCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Full Address',
-                  hintText: 'Street, building, area...',
+                  labelText: 'Recipient Full Name *',
+                  hintText: 'e.g. John Doe',
                 ),
-                maxLines: 3,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number *',
+                  hintText: 'Contact number for delivery',
+                ),
+                keyboardType: TextInputType.phone,
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Required' : null,
               ),
@@ -139,19 +151,23 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _cityCtrl,
+                      controller: _provinceCtrl,
                       decoration: const InputDecoration(
-                        labelText: 'City',
+                        labelText: 'Province *',
                       ),
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
-                      controller: _stateCtrl,
+                      controller: _districtCtrl,
                       decoration: const InputDecoration(
-                        labelText: 'State',
+                        labelText: 'District *',
                       ),
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                     ),
                   ),
                 ],
@@ -161,18 +177,20 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _zipCtrl,
+                      controller: _municipalityCtrl,
                       decoration: const InputDecoration(
-                        labelText: 'ZIP Code',
+                        labelText: 'Municipality *',
                       ),
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
-                      controller: _countryCtrl,
+                      controller: _zipCtrl,
                       decoration: const InputDecoration(
-                        labelText: 'Country',
+                        labelText: 'ZIP Code',
                       ),
                     ),
                   ),
@@ -180,12 +198,14 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _phoneCtrl,
+                controller: _streetCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  hintText: 'Contact number for this address',
+                  labelText: 'Street Address *',
+                  hintText: 'e.g. Street name, Area, Building',
                 ),
-                keyboardType: TextInputType.phone,
+                maxLines: 2,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               CheckboxListTile(

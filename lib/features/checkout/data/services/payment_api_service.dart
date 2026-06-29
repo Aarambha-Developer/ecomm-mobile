@@ -4,6 +4,7 @@ import 'package:aarambha_app/core/constants/api_constants.dart';
 import 'package:aarambha_app/core/network/api_client.dart';
 import 'package:aarambha_app/features/checkout/data/models/order_request.dart';
 import 'package:aarambha_app/features/checkout/data/models/payment_method.dart';
+import 'package:aarambha_app/features/checkout/data/models/delivery_area.dart';
 
 class PaymentApiService {
   final ApiClient _client;
@@ -159,5 +160,29 @@ class PaymentApiService {
     });
 
     await _client.upload(ApiConstants.paymentProofsMe, data: formData);
+  }
+
+  Future<List<DeliveryArea>> fetchDeliveryAreas() async {
+    final response = await _client.get(ApiConstants.deliveryAreas);
+    final data = response['data'];
+
+    List<dynamic> raw = [];
+    if (data is List) {
+      raw = data;
+    } else if (data is Map && data['results'] is List) {
+      raw = data['results'] as List;
+    } else if (response is List) {
+      raw = response as List<dynamic>;
+    } else if (response.containsKey('results') &&
+        response['results'] is List) {
+      raw = response['results'] as List;
+    }
+
+    return raw
+        .whereType<Map<Object?, Object?>>()
+        .map((e) => DeliveryArea.fromJson(
+              Map<String, dynamic>.from(e),
+            ))
+        .toList();
   }
 }

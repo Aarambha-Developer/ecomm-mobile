@@ -225,10 +225,10 @@ class _AddressCard extends StatelessWidget {
                 fontSize: 13,
               ),
             ),
-            if (address.phoneNumber != null) ...[
+            if (address.phone.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
-                address.phoneNumber!,
+                address.phone,
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 13,

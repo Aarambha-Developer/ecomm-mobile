@@ -73,4 +73,5 @@ class ApiConstants {
   // Contact
   static const String contact = '/contact/';
   static const String adminContacts = '/admin/contacts/';
+  static const String deliveryAreas = '/delivery-areas/';
 }

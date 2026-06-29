@@ -1,57 +1,59 @@
 class Address {
   final String id;
-  final String label;
-  final String fullAddress;
-  final String? city;
-  final String? state;
+  final String fullName;
+  final String phone;
+  final String province;
+  final String district;
+  final String municipality;
+  final String street;
   final String? zipCode;
-  final String? country;
-  final String? phoneNumber;
+  final String label;
   final bool isDefault;
 
   const Address({
     required this.id,
-    required this.label,
-    required this.fullAddress,
-    this.city,
-    this.state,
+    required this.fullName,
+    required this.phone,
+    required this.province,
+    required this.district,
+    required this.municipality,
+    required this.street,
     this.zipCode,
-    this.country,
-    this.phoneNumber,
+    required this.label,
     this.isDefault = false,
   });
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
       id: json['id']?.toString() ?? '',
-      label: json['label'] as String? ?? json['title'] as String? ?? '',
-      fullAddress: json['full_address'] as String? ??
-          json['address'] as String? ??
-          '',
-      city: json['city'] as String?,
-      state: json['state'] as String?,
-      zipCode: json['zip_code'] as String? ?? json['zip'] as String?,
-      country: json['country'] as String?,
-      phoneNumber: json['phone_number'] as String?,
-      isDefault: json['is_default'] as bool? ?? json['default'] as bool? ?? false,
+      fullName: json['full_name']?.toString() ?? json['fullName']?.toString() ?? '',
+      phone: json['phone']?.toString() ?? json['phoneNumber']?.toString() ?? '',
+      province: json['province']?.toString() ?? json['state']?.toString() ?? '',
+      district: json['district']?.toString() ?? json['city']?.toString() ?? '',
+      municipality: json['municipality']?.toString() ?? '',
+      street: json['street']?.toString() ?? json['full_address']?.toString() ?? json['address']?.toString() ?? '',
+      zipCode: json['zip_code']?.toString() ?? json['zipCode']?.toString(),
+      label: json['label']?.toString() ?? '',
+      isDefault: json['is_default'] as bool? ?? json['isDefault'] as bool? ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'full_name': fullName,
+      'phone': phone,
+      'province': province,
+      'district': district,
+      'municipality': municipality,
+      'street': street,
+      if (zipCode != null && zipCode!.isNotEmpty) 'zip_code': zipCode,
       'label': label,
-      'full_address': fullAddress,
-      if (city != null) 'city': city,
-      if (state != null) 'state': state,
-      if (zipCode != null) 'zip_code': zipCode,
-      if (country != null) 'country': country,
-      if (phoneNumber != null) 'phone_number': phoneNumber,
       'is_default': isDefault,
     };
   }
 
   String get displayText {
-    final parts = [fullAddress, city, state, zipCode, country]
+    final parts = [street, municipality, district, province, zipCode]
         .where((e) => e != null && e.isNotEmpty)
         .toList();
     return parts.join(', ');

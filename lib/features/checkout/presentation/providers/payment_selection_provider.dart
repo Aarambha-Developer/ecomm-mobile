@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:aarambha_app/features/checkout/data/models/order_request.dart';
 import 'package:aarambha_app/features/checkout/data/models/payment_method.dart';
+import 'package:aarambha_app/features/checkout/data/models/delivery_area.dart';
 import 'package:aarambha_app/features/checkout/data/services/payment_api_service.dart';
 
 final paymentApiServiceProvider = Provider<PaymentApiService>((ref) {
@@ -204,4 +205,9 @@ class PaymentSelectionNotifier extends StateNotifier<PaymentSelectionState> {
 final paymentSelectionProvider = StateNotifierProvider<
     PaymentSelectionNotifier, PaymentSelectionState>((ref) {
   return PaymentSelectionNotifier(ref.read(paymentApiServiceProvider));
+});
+
+final deliveryAreasProvider = FutureProvider<List<DeliveryArea>>((ref) async {
+  final service = ref.read(paymentApiServiceProvider);
+  return await service.fetchDeliveryAreas();
 });
