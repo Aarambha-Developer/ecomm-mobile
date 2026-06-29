@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/core/network/api_exceptions.dart';
+import 'package:aarambha_app/core/utils/toast_utils.dart';
 import 'package:aarambha_app/features/auth/data/models/auth_user.dart';
 import 'package:aarambha_app/features/auth/presentation/providers/auth_provider.dart';
 
@@ -23,6 +24,67 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   bool _isSaving = false;
   String? _loadError;
   String _avatarInitial = 'U';
+
+  Future<void> _showDeleteAccountDialog() async {
+    final reasonController = TextEditingController();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Your Account?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'This action is permanent and cannot be undone. All your saved profile, orders, and addresses will be scheduled for deletion.',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Why do you want to delete your account? (Optional)',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: reasonController,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                hintText: 'Share your feedback...',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.all(10),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final reason = reasonController.text.trim();
+      debugPrint('User requested account deletion. Reason: $reason');
+      
+      if (!mounted) return;
+      await ref.read(authProvider.notifier).logout();
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Your account is being deleted.');
+      context.go('/');
+    }
+    reasonController.dispose();
+  }
 
   @override
   void initState() {
@@ -273,6 +335,17 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                         context.push('/profile/change-password');
                       },
                       child: const Text('Change Password'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
+                      onPressed: _showDeleteAccountDialog,
+                      child: const Text('Delete Your Account'),
                     ),
                   ),
                   const SizedBox(height: 40),

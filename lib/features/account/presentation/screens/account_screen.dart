@@ -110,6 +110,8 @@ class AccountScreen extends ConsumerWidget {
                   onTap: () => context.push('/orders')),
               _menuItem(context, Icons.favorite_outline, 'My Wishlist',
                   onTap: () => context.push('/wishlist')),
+              _menuItem(context, Icons.location_on_outlined, 'Saved Addresses',
+                  onTap: () => context.push('/addresses')),
             ]),
             const SizedBox(height: 14),
             _buildSection(context, 'Support', [
@@ -120,6 +122,8 @@ class AccountScreen extends ConsumerWidget {
             ]),
             const SizedBox(height: 14),
             _buildSection(context, 'Legal & Info', [
+              _menuItem(context, Icons.local_shipping_outlined, 'Shipping & Return Policy',
+                  onTap: () => context.push('/shipping-policy')),
               _menuItem(context, Icons.policy_outlined, 'Policies',
                   onTap: () => context.push('/policies')),
               _menuItem(context, Icons.description_outlined, 'Terms and Conditions',

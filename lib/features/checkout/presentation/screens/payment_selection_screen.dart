@@ -50,6 +50,9 @@ class _PaymentSelectionScreenState
   String? _selectedDistrict;
   String? _selectedMunicipality;
   bool _useSavedAddress = true;
+  bool _saveAddressChecked = true;
+  bool _setAsDefaultChecked = true;
+  final _newAddressLabelController = TextEditingController(text: 'Home');
 
   List<String> get _provinces {
     return _allDeliveryAreas.map((e) => e.province).toSet().toList()..sort();
@@ -237,6 +240,7 @@ class _PaymentSelectionScreenState
     _streetController.dispose();
     _zipCodeController.dispose();
     _notesController.dispose();
+    _newAddressLabelController.dispose();
     super.dispose();
   }
 
@@ -273,6 +277,31 @@ class _PaymentSelectionScreenState
         street.isEmpty) {
       AppToast.showError(context, 'Please fill in all required shipping fields');
       return;
+    }
+
+    final authState = ref.read(authProvider);
+    if (!_useSavedAddress && _saveAddressChecked && authState.status == AuthStatus.authenticated) {
+      try {
+        final addressesRepo = ref.read(addressesRepositoryProvider);
+        final label = _newAddressLabelController.text.trim().isNotEmpty
+            ? _newAddressLabelController.text.trim()
+            : 'Home';
+        await addressesRepo.createAddress(Address(
+          id: '',
+          fullName: fullName,
+          phone: phone,
+          province: province,
+          district: district,
+          municipality: municipality,
+          street: street,
+          zipCode: zipCode.isNotEmpty ? zipCode : null,
+          label: label,
+          isDefault: _setAsDefaultChecked,
+        ));
+        ref.invalidate(addressesProvider);
+      } catch (e) {
+        debugPrint('Failed to save address: $e');
+      }
     }
 
     final notifier = ref.read(paymentSelectionProvider.notifier);
@@ -360,6 +389,12 @@ class _PaymentSelectionScreenState
           setState(() {
             _selectedSavedAddress = defaultAddress;
             _applySavedAddress(defaultAddress);
+          });
+        });
+      } else if (addresses.isEmpty && _useSavedAddress) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            _useSavedAddress = false;
           });
         });
       }
@@ -804,6 +839,42 @@ class _PaymentSelectionScreenState
                           prefixIcon: Icon(Icons.pin_outlined),
                         ),
                       ),
+                      if (!_useSavedAddress && ref.watch(authProvider).status == AuthStatus.authenticated) ...[
+                        const SizedBox(height: 12),
+                        CheckboxListTile(
+                          title: const Text('Save this address for future checkouts', style: TextStyle(fontSize: 14)),
+                          value: _saveAddressChecked,
+                          onChanged: (v) {
+                            setState(() {
+                              _saveAddressChecked = v ?? false;
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        if (_saveAddressChecked) ...[
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _newAddressLabelController,
+                            decoration: const InputDecoration(
+                              labelText: 'Address Label (e.g. Home, Office, Work) *',
+                              prefixIcon: Icon(Icons.label_outline),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          CheckboxListTile(
+                            title: const Text('Set as default address', style: TextStyle(fontSize: 14)),
+                            value: _setAsDefaultChecked,
+                            onChanged: (v) {
+                              setState(() {
+                                _setAsDefaultChecked = v ?? false;
+                              });
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),

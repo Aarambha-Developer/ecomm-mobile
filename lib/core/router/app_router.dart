@@ -25,10 +25,9 @@ import '../../features/contact/presentation/screens/contact_screen.dart';
 import '../../features/contact/presentation/screens/contact_details_screen.dart';
 import '../../features/home/data/models/home_models.dart';
 import '../../features/home/presentation/screens/story_viewer_screen.dart';
-// TODO: Re-enable when API endpoints are available
-// import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
-// import '../../features/addresses/presentation/screens/address_form_screen.dart';
-// import '../../features/addresses/data/models/address.dart';
+import '../../features/addresses/presentation/screens/addresses_list_screen.dart';
+import '../../features/addresses/presentation/screens/address_form_screen.dart';
+import '../../features/addresses/data/models/address.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
@@ -56,11 +55,10 @@ class AppRouter {
   static const _protectedRoutes = <String>{
     '/orders',
     '/checkout',
-    // '/addresses',
-    // '/addresses/add',
-    // '/addresses/edit',
+    '/addresses',
+    '/addresses/add',
+    '/addresses/edit',
     '/profile/edit',
-    // '/profile/change-password',
   };
 
   static const _authRoutes = <String>{
@@ -173,6 +171,13 @@ class AppRouter {
         builder: (context, state) => const ContactDetailsScreen(),
       ),
       GoRoute(
+        path: '/shipping-policy',
+        builder: (context, state) => const StaticContentViewerScreen(
+          title: 'Shipping & Return Policy',
+          content: 'Shipping & Return Policy\n\n1. Shipping Policy\n* We ship worldwide. All orders are processed and dispatched within 1-2 business days.\n* Delivery charges are calculated dynamically at checkout based on your delivery area.\n* Standard delivery takes 2-5 business days depending on location.\n\n2. Return & Exchange Policy\n* You can return any unused product in its original packaging within 15 days of delivery for a full refund or exchange.\n* To initiate a return, please contact our support team or use the Contact Us page.\n* Shipping fees for returns are borne by the user unless the product delivered was damaged or incorrect.',
+        ),
+      ),
+      GoRoute(
         path: '/policies',
         builder: (context, state) => const StaticContentViewerScreen(
           title: 'Policies',
@@ -213,23 +218,22 @@ class AppRouter {
         path: '/profile/change-password',
         builder: (context, state) => const ChangePasswordScreen(),
       ),
-      // TODO: /addresses routes disabled - /addresses/ endpoint does not exist in API spec
-      // GoRoute(
-      //   path: '/addresses',
-      //   builder: (context, state) => const AddressesListScreen(),
-      // ),
-      // GoRoute(
-      //   path: '/addresses/add',
-      //   builder: (context, state) => const AddressFormScreen(),
-      // ),
-      // GoRoute(
-      //   path: '/addresses/edit',
-      //   builder: (context, state) {
-      //     return AddressFormScreen(
-      //       address: state.extra as Address?,
-      //     );
-      //   },
-      // ),
+      GoRoute(
+        path: '/addresses',
+        builder: (context, state) => const AddressesListScreen(),
+      ),
+      GoRoute(
+        path: '/addresses/add',
+        builder: (context, state) => const AddressFormScreen(),
+      ),
+      GoRoute(
+        path: '/addresses/edit',
+        builder: (context, state) {
+          return AddressFormScreen(
+            address: state.extra as Address?,
+          );
+        },
+      ),
     ],
   );
 
