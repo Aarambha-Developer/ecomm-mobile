@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aarambha_app/core/theme/app_colors.dart';
 import 'package:aarambha_app/features/addresses/presentation/providers/addresses_provider.dart';
 import 'package:aarambha_app/features/addresses/data/models/address.dart';
+import 'package:aarambha_app/features/checkout/presentation/providers/payment_selection_provider.dart';
+import 'package:aarambha_app/features/checkout/data/models/delivery_area.dart';
 
 class AddressFormScreen extends ConsumerStatefulWidget {
   final Address? address;
@@ -26,7 +28,37 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
   bool _isDefault = false;
   bool _isSaving = false;
 
+  List<DeliveryArea> _allDeliveryAreas = [];
+  String? _selectedProvince;
+  String? _selectedDistrict;
+  String? _selectedMunicipality;
+
   bool get _isEditing => widget.address != null;
+
+  List<String> get _provinces {
+    return _allDeliveryAreas.map((e) => e.province).toSet().toList()..sort();
+  }
+
+  List<String> get _districts {
+    if (_selectedProvince == null) return [];
+    return _allDeliveryAreas
+        .where((e) => e.province == _selectedProvince)
+        .map((e) => e.district)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  List<String> get _municipalities {
+    if (_selectedProvince == null || _selectedDistrict == null) return [];
+    return _allDeliveryAreas
+        .where((e) =>
+            e.province == _selectedProvince && e.district == _selectedDistrict)
+        .map((e) => e.municipality)
+        .toSet()
+        .toList()
+      ..sort();
+  }
 
   @override
   void initState() {
@@ -41,6 +73,10 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
     _streetCtrl = TextEditingController(text: a?.street ?? '');
     _zipCtrl = TextEditingController(text: a?.zipCode ?? '');
     _isDefault = a?.isDefault ?? false;
+
+    _selectedProvince = a?.province != null && a!.province.isNotEmpty ? a.province : null;
+    _selectedDistrict = a?.district != null && a!.district.isNotEmpty ? a.district : null;
+    _selectedMunicipality = a?.municipality != null && a!.municipality.isNotEmpty ? a.municipality : null;
   }
 
   @override
@@ -105,6 +141,41 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final deliveryAreasAsync = ref.watch(deliveryAreasProvider);
+    deliveryAreasAsync.whenData((areas) {
+      if (_allDeliveryAreas.isEmpty && areas.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            _allDeliveryAreas = areas;
+            if (_selectedProvince != null) {
+              final matchedProvince = _provinces
+                  .where((e) => e.toLowerCase() == _selectedProvince!.toLowerCase())
+                  .firstOrNull;
+              if (matchedProvince != null) {
+                _selectedProvince = matchedProvince;
+                if (_selectedDistrict != null) {
+                  final matchedDistrict = _districts
+                      .where((e) => e.toLowerCase() == _selectedDistrict!.toLowerCase())
+                      .firstOrNull;
+                  if (matchedDistrict != null) {
+                    _selectedDistrict = matchedDistrict;
+                    if (_selectedMunicipality != null) {
+                      final matchedMunicipality = _municipalities
+                          .where((e) => e.toLowerCase() == _selectedMunicipality!.toLowerCase())
+                          .firstOrNull;
+                      if (matchedMunicipality != null) {
+                        _selectedMunicipality = matchedMunicipality;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          });
+        });
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Address' : 'Add Address'),
@@ -147,54 +218,129 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                     v == null || v.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _provinceCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Province *',
-                      ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
+              
+              const Text('Province *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 6),
+              if (_allDeliveryAreas.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedProvince,
+                      hint: const Text('Select Province'),
+                      items: _provinces.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                      validator: (v) => v == null ? 'Required' : null,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedProvince = value;
+                          _selectedDistrict = null;
+                          _selectedMunicipality = null;
+                          _provinceCtrl.text = value ?? '';
+                          _districtCtrl.clear();
+                          _municipalityCtrl.clear();
+                        });
+                      },
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _districtCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'District *',
-                      ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
-                    ),
+                )
+              else
+                TextFormField(
+                  controller: _provinceCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Province *',
                   ),
-                ],
-              ),
+                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                ),
+
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _municipalityCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Municipality *',
-                      ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
+              const Text('District *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 6),
+              if (_allDeliveryAreas.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedDistrict,
+                      hint: const Text('Select District'),
+                      items: _districts.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+                      validator: (v) => v == null ? 'Required' : null,
+                      onChanged: _selectedProvince == null
+                          ? null
+                          : (value) {
+                              setState(() {
+                                _selectedDistrict = value;
+                                _selectedMunicipality = null;
+                                _districtCtrl.text = value ?? '';
+                                _municipalityCtrl.clear();
+                              });
+                            },
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _zipCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'ZIP Code',
-                      ),
+                )
+              else
+                TextFormField(
+                  controller: _districtCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'District *',
+                  ),
+                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                ),
+
+              const SizedBox(height: 16),
+              const Text('Municipality *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 6),
+              if (_allDeliveryAreas.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedMunicipality,
+                      hint: const Text('Select Municipality'),
+                      items: _municipalities.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                      validator: (v) => v == null ? 'Required' : null,
+                      onChanged: _selectedDistrict == null
+                          ? null
+                          : (value) {
+                              setState(() {
+                                _selectedMunicipality = value;
+                                _municipalityCtrl.text = value ?? '';
+                              });
+                            },
                     ),
                   ),
-                ],
+                )
+              else
+                TextFormField(
+                  controller: _municipalityCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Municipality *',
+                  ),
+                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _zipCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'ZIP Code (optional)',
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(

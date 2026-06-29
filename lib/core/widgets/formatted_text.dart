@@ -195,6 +195,49 @@ class FormattedText extends StatelessWidget {
       return spans;
     }
 
+    // Format A.2: Quill Delta with 'ops' key (JSON Map with ops list)
+    if (decoded is Map && decoded['ops'] is List) {
+      final List<InlineSpan> spans = [];
+      final ops = decoded['ops'] as List;
+      for (final item in ops) {
+        if (item is Map) {
+          final insert = item['insert'];
+          if (insert is String) {
+            final attrs = item['attributes'] as Map?;
+            bool isBold = false;
+            bool isItalic = false;
+            double fontSize = baseStyle.fontSize ?? 14.0;
+
+            if (attrs != null) {
+              if (attrs['bold'] == true) isBold = true;
+              if (attrs['italic'] == true) isItalic = true;
+              if (attrs['header'] != null) {
+                isBold = true;
+                final headerLevel = attrs['header'];
+                if (headerLevel == 1) {
+                  fontSize = 20.0;
+                } else if (headerLevel == 2) {
+                  fontSize = 18.0;
+                } else {
+                  fontSize = 16.0;
+                }
+              }
+            }
+
+            spans.add(TextSpan(
+              text: insert,
+              style: baseStyle.copyWith(
+                fontWeight: isBold ? FontWeight.bold : baseStyle.fontWeight,
+                fontStyle: isItalic ? FontStyle.italic : baseStyle.fontStyle,
+                fontSize: fontSize,
+              ),
+            ));
+          }
+        }
+      }
+      return spans;
+    }
+
     // Format B: EditorJS (JSON Map with 'blocks' key)
     if (decoded is Map && decoded['blocks'] is List) {
       final List<InlineSpan> spans = [];
