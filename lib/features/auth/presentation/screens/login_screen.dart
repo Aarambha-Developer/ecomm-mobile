@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -204,43 +205,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   
                   // Apple Sign In (Official Branding Guidelines)
-                  Container(
-                    height: 50,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  if (Platform.isIOS) ...[
+                    Container(
+                      height: 50,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
                         ),
-                        elevation: 0,
-                      ),
-                      onPressed: isLoading
-                          ? null
-                          : () => ref.read(authProvider.notifier).loginWithApple(),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.apple,
-                            size: 24,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            'Sign in with Apple',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                        onPressed: isLoading
+                            ? null
+                            : () => ref.read(authProvider.notifier).loginWithApple(),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.apple,
+                              size: 24,
                               color: Colors.white,
-                              letterSpacing: 0.2,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 10),
+                            Text(
+                              'Sign in with Apple',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
