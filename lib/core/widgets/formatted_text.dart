@@ -42,33 +42,8 @@ class FormattedText extends StatelessWidget {
       }
     }
 
-    // 1. Decode HTML entities and replace structural tags
-    String processed = text
-        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
-        .replaceAll(RegExp(r'<p>', caseSensitive: false), '')
-        .replaceAll(RegExp(r'</p>', caseSensitive: false), '\n\n')
-        .replaceAll(RegExp(r'<li>', caseSensitive: false), ' • ')
-        .replaceAll(RegExp(r'</li>', caseSensitive: false), '\n')
-        .replaceAll(RegExp(r'<ul>|</ul>|<ol>|</ol>', caseSensitive: false), '\n')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', "'")
-        .replaceAll('&nbsp;', ' ');
-
-    // Strip any HTML tag except bold/italic formatting tags: <b>, </b>, <strong>, </strong>, <i>, </i>, <em>, </em>
-    final tagRegExp = RegExp(r'</?([a-zA-Z0-9]+)[^>]*>');
-    processed = processed.replaceAllMapped(tagRegExp, (match) {
-      final tagName = match.group(1)!.toLowerCase();
-      if (tagName == 'b' || tagName == 'strong' || tagName == 'i' || tagName == 'em') {
-        return match.group(0)!; // Keep formatting tags intact
-      }
-      return ''; // Strip all other HTML tags
-    });
-
-    // Normalize spacing and trim
-    processed = processed.trim();
+    // 1. Clean HTML structure and tags
+    final String processed = _cleanHtml(text);
 
     // 2. State-based parsing for inline formats (bold/italic)
     final List<InlineSpan> spans = _parseInlineHtmlAndMarkdown(processed, baseStyle);
@@ -82,6 +57,31 @@ class FormattedText extends StatelessWidget {
         style: baseStyle,
       ),
     );
+  }
+
+  String _cleanHtml(String html) {
+    String processed = html
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'<p>', caseSensitive: false), '')
+        .replaceAll(RegExp(r'</p>', caseSensitive: false), '\n\n')
+        .replaceAll(RegExp(r'<li>', caseSensitive: false), ' • ')
+        .replaceAll(RegExp(r'</li>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'<ul>|</ul>|<ol>|</ol>', caseSensitive: false), '\n')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&nbsp;', ' ');
+
+    final tagRegExp = RegExp(r'</?([a-zA-Z0-9]+)[^>]*>');
+    return processed.replaceAllMapped(tagRegExp, (match) {
+      final tagName = match.group(1)!.toLowerCase();
+      if (tagName == 'b' || tagName == 'strong' || tagName == 'i' || tagName == 'em') {
+        return match.group(0)!;
+      }
+      return '';
+    }).trim();
   }
 
   List<InlineSpan> _parseInlineHtmlAndMarkdown(String text, TextStyle baseStyle) {
@@ -181,14 +181,15 @@ class FormattedText extends StatelessWidget {
               }
             }
 
-            spans.add(TextSpan(
-              text: insert,
-              style: baseStyle.copyWith(
+            final parsedInsertSpans = _parseInlineHtmlAndMarkdown(
+              _cleanHtml(insert),
+              baseStyle.copyWith(
                 fontWeight: isBold ? FontWeight.bold : baseStyle.fontWeight,
                 fontStyle: isItalic ? FontStyle.italic : baseStyle.fontStyle,
                 fontSize: fontSize,
               ),
-            ));
+            );
+            spans.addAll(parsedInsertSpans);
           }
         }
       }
@@ -224,14 +225,15 @@ class FormattedText extends StatelessWidget {
               }
             }
 
-            spans.add(TextSpan(
-              text: insert,
-              style: baseStyle.copyWith(
+            final parsedInsertSpans = _parseInlineHtmlAndMarkdown(
+              _cleanHtml(insert),
+              baseStyle.copyWith(
                 fontWeight: isBold ? FontWeight.bold : baseStyle.fontWeight,
                 fontStyle: isItalic ? FontStyle.italic : baseStyle.fontStyle,
                 fontSize: fontSize,
               ),
-            ));
+            );
+            spans.addAll(parsedInsertSpans);
           }
         }
       }
