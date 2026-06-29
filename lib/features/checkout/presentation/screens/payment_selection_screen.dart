@@ -537,86 +537,62 @@ class _PaymentSelectionScreenState
                   ),
                   const SizedBox(height: 20),
                 ],
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Shipping Details',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    if (addressesAsync.valueOrNull != null && addressesAsync.valueOrNull!.isNotEmpty)
-                      TextButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _useSavedAddress = !_useSavedAddress;
-                            if (!_useSavedAddress) {
-                              _selectedSavedAddress = null;
-                              _fullNameController.clear();
-                              _phoneController.clear();
-                              _provinceController.clear();
-                              _districtController.clear();
-                              _municipalityController.clear();
-                              _streetController.clear();
-                              _zipCodeController.clear();
-                              _selectedProvince = null;
-                              _selectedDistrict = null;
-                              _selectedMunicipality = null;
-                              _recalculateDeliveryCharge();
-                            } else {
-                              final defaultAddress = addressesAsync.valueOrNull!.firstWhere(
-                                (e) => e.isDefault,
-                                orElse: () => addressesAsync.valueOrNull!.first,
-                              );
-                              _selectedSavedAddress = defaultAddress;
-                              _applySavedAddress(defaultAddress);
-                            }
-                          });
-                        },
-                        icon: Icon(_useSavedAddress ? Icons.edit_note : Icons.playlist_add_check),
-                        label: Text(_useSavedAddress ? 'New Address' : 'Saved Addresses'),
-                      ),
-                  ],
+                Text(
+                  'Shipping Address',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const SizedBox(height: 10),
-                if (_useSavedAddress &&
-                    addressesAsync.valueOrNull != null &&
-                    addressesAsync.valueOrNull!.isNotEmpty) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<Address>(
-                        isExpanded: true,
-                        value: _selectedSavedAddress,
-                        hint: const Text('Select shipping address'),
-                        items: addressesAsync.valueOrNull!.map((address) {
-                          return DropdownMenuItem<Address>(
-                            value: address,
-                            child: Text(
-                              '${address.label}: ${address.fullName}, ${address.displayText}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                const SizedBox(height: 12),
+                if (addressesAsync.valueOrNull != null && addressesAsync.valueOrNull!.isNotEmpty) ...[
+                  SizedBox(
+                    height: 110,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: addressesAsync.valueOrNull!.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == addressesAsync.valueOrNull!.length) {
+                          final isSelected = !_useSavedAddress;
+                          return _AddNewAddressCard(
+                            isSelected: isSelected,
+                            onTap: () {
+                              setState(() {
+                                _useSavedAddress = false;
+                                _selectedSavedAddress = null;
+                                _fullNameController.clear();
+                                _phoneController.clear();
+                                _provinceController.clear();
+                                _districtController.clear();
+                                _municipalityController.clear();
+                                _streetController.clear();
+                                _zipCodeController.clear();
+                                _selectedProvince = null;
+                                _selectedDistrict = null;
+                                _selectedMunicipality = null;
+                                _recalculateDeliveryCharge();
+                              });
+                            },
                           );
-                        }).toList(),
-                        onChanged: (address) {
-                          if (address != null) {
+                        }
+
+                        final address = addressesAsync.valueOrNull![index];
+                        final isSelected = _useSavedAddress && _selectedSavedAddress?.id == address.id;
+                        return _AddressCardItem(
+                          address: address,
+                          isSelected: isSelected,
+                          onTap: () {
                             setState(() {
+                              _useSavedAddress = true;
                               _selectedSavedAddress = address;
                               _applySavedAddress(address);
                             });
-                          }
-                        },
-                      ),
+                          },
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 16),
                 ],
-                Container(
+                if (!_useSavedAddress) ...[
+                  Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
@@ -878,6 +854,7 @@ class _PaymentSelectionScreenState
                     ],
                   ),
                 ),
+              ],
                 if (_fullNameController.text.trim().isNotEmpty &&
                     _municipalityController.text.trim().isNotEmpty &&
                     _matchedArea == null) ...[
@@ -1242,6 +1219,169 @@ class _SectionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddressCardItem extends StatelessWidget {
+  final Address address;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _AddressCardItem({
+    required this.address,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    IconData getIcon() {
+      switch (address.label.toLowerCase()) {
+        case 'home':
+          return Icons.home_outlined;
+        case 'office':
+        case 'work':
+          return Icons.work_outlined;
+        default:
+          return Icons.location_on_outlined;
+      }
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2.0 : 1.2,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        getIcon(),
+                        size: 16,
+                        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          address.label,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              address.fullName,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              address.displayText,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddNewAddressCard extends StatelessWidget {
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _AddNewAddressCard({
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2.0 : 1.2,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_location_alt_outlined,
+              size: 28,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Add New Address',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
