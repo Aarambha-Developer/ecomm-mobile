@@ -9,6 +9,7 @@ class Order {
   final String? paymentStatus;
   final String? coupon;
   final double? discountAmount;
+  final double? deliveryCharge;
   final int totalItems;
   final double totalPrice;
   final double subtotalPrice;
@@ -16,6 +17,15 @@ class Order {
   final DateTime? updatedAt;
   final List<OrderItem> items;
   final DateTime createdAt;
+
+  final String? shippingFullName;
+  final String? shippingPhone;
+  final String? shippingEmail;
+  final String? shippingProvince;
+  final String? shippingDistrict;
+  final String? shippingMunicipality;
+  final String? shippingStreet;
+  final String? shippingZipCode;
 
   const Order({
     required this.id,
@@ -28,6 +38,7 @@ class Order {
     this.paymentStatus,
     this.coupon,
     this.discountAmount,
+    this.deliveryCharge,
     this.totalItems = 0,
     this.totalPrice = 0,
     this.subtotalPrice = 0,
@@ -35,6 +46,14 @@ class Order {
     this.updatedAt,
     this.items = const [],
     required this.createdAt,
+    this.shippingFullName,
+    this.shippingPhone,
+    this.shippingEmail,
+    this.shippingProvince,
+    this.shippingDistrict,
+    this.shippingMunicipality,
+    this.shippingStreet,
+    this.shippingZipCode,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -116,6 +135,15 @@ class Order {
           : null,
       items: items,
       createdAt: _parseDate(json['created_at']),
+      deliveryCharge: json['delivery_charge'] != null ? parseDouble(json['delivery_charge']) : null,
+      shippingFullName: parseString(json['shipping_full_name']),
+      shippingPhone: parseString(json['shipping_phone']),
+      shippingEmail: parseString(json['shipping_email']),
+      shippingProvince: parseString(json['shipping_province']),
+      shippingDistrict: parseString(json['shipping_district']),
+      shippingMunicipality: parseString(json['shipping_municipality']),
+      shippingStreet: parseString(json['shipping_street']),
+      shippingZipCode: parseString(json['shipping_zip_code']),
     );
   }
 
@@ -123,6 +151,23 @@ class Order {
     if (date == null) return DateTime.now();
     if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
     return DateTime.now();
+  }
+
+  String? get formattedShippingAddress {
+    if (shippingStreet != null ||
+        shippingMunicipality != null ||
+        shippingDistrict != null ||
+        shippingProvince != null) {
+      final parts = [
+        shippingStreet,
+        shippingMunicipality,
+        shippingDistrict,
+        shippingProvince,
+        shippingZipCode,
+      ].where((e) => e != null && e.trim().isNotEmpty).toList();
+      if (parts.isNotEmpty) return parts.join(', ');
+    }
+    return shippingAddress;
   }
 
   bool get isPending => status == 'pending';

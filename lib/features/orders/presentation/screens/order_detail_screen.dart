@@ -46,10 +46,61 @@ class OrderDetailScreen extends ConsumerWidget {
               children: [
                 _OrderHeader(order: order),
                 const SizedBox(height: 20),
-                if (order.shippingAddress != null && order.shippingAddress!.trim().isNotEmpty) ...[
-                  _Section(title: 'Shipping Address', child: Text(order.shippingAddress!)),
-                  const SizedBox(height: 12),
-                ],
+                Builder(
+                  builder: (context) {
+                    final address = order.formattedShippingAddress;
+                    if (address == null || address.trim().isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      children: [
+                        _Section(
+                          title: 'Shipping Details',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (order.shippingFullName != null && order.shippingFullName!.isNotEmpty) ...[
+                                Text(
+                                  order.shippingFullName!,
+                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                                ),
+                                const SizedBox(height: 4),
+                              ],
+                              Text(address, style: const TextStyle(fontSize: 14)),
+                              if (order.shippingPhone != null && order.shippingPhone!.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.phone_outlined, size: 14, color: AppColors.textSecondary),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      order.shippingPhone!,
+                                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              if (order.shippingEmail != null && order.shippingEmail!.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.email_outlined, size: 14, color: AppColors.textSecondary),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      order.shippingEmail!,
+                                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    );
+                  }
+                ),
                 
                 // Payment section
                 Builder(
@@ -243,6 +294,16 @@ class OrderDetailScreen extends ConsumerWidget {
                               : 'Discount',
                           value: '- ${Formatters.formatCurrencyPlain(order.discountAmount!)}',
                           valueColor: AppColors.success,
+                        ),
+                      if (order.deliveryCharge != null)
+                        _SummaryRow(
+                          label: 'Delivery Charge',
+                          value: order.deliveryCharge! > 0
+                              ? Formatters.formatCurrencyPlain(order.deliveryCharge!)
+                              : 'Free',
+                          valueColor: order.deliveryCharge! > 0
+                              ? null
+                              : AppColors.success,
                         ),
                       const Divider(),
                       _SummaryRow(
